@@ -43,7 +43,7 @@ Toto may consume series produced by monitoring agents, metrics backends, sensors
 
 ###### Environment
 
-The reference package targets Python 3.12 with `toto-2==2.0.0`, PyTorch 2.7, NumPy 1.26.4, and pandas 2.2.3. The 2.5B checkpoint is heavyweight, so a CUDA-capable GPU is the practical release-reference environment; upstream recommends Ampere or newer for optimal execution. The tutorial makes `decode_block_size=768` explicit, while the public API also permits `None` for a single forward-pass decode. The data environment assumes ordered numerical histories representative enough that chronological backtesting is meaningful; abrupt regime changes or novel metric behavior can degrade forecasts.
+The reference package targets Python 3.12 with `toto-2==2.0.0`, PyTorch 2.7, torchvision 0.22 (pinned to the build matching PyTorch because hosted runtimes ship a torchvision compiled against their own PyTorch, and an orphaned torchvision breaks the upstream gluonts/torchmetrics import chain), NumPy 1.26.4, and pandas 2.2.3. The 2.5B checkpoint is heavyweight, so a CUDA-capable GPU is the practical release-reference environment; upstream recommends Ampere or newer for optimal execution. The tutorial makes `decode_block_size=768` explicit, while the public API also permits `None` for a single forward-pass decode. The data environment assumes ordered numerical histories representative enough that chronological backtesting is meaningful; abrupt regime changes or novel metric behavior can degrade forecasts.
 
 #### Metrics
 
