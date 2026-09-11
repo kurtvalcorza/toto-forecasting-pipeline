@@ -56,8 +56,12 @@ class TotoForecastPipeline:
                 f"decode_block_size must be a multiple of the model patch size ({patch_size})"
             )
         # Upstream patches the context in blocks of `patch_size` and requires the context length
-        # to be a multiple of it. Like the upstream GluonTS adapter, pad on the left and mark the
-        # padded positions unobserved so they carry no signal into the scaler or attention.
+        # to be a multiple of it. Pad on the left and mark the padded positions unobserved: the
+        # upstream causal scaler and patch embedding are mask-aware, so zero pads carry no signal.
+        # (Upstream's own GluonTS adapter truncates to a patch multiple instead; padding keeps every
+        # observed value.) At least one full patch of real context is required.
+        if values.shape[1] < patch_size:
+            raise ValueError(f"context length must be at least the model patch size ({patch_size})")
         context_padding = (patch_size - values.shape[1] % patch_size) % patch_size
 
         import torch

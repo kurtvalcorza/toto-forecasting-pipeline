@@ -26,7 +26,7 @@ result = pipe.forecast(
 print(result["median"])
 ```
 
-`decode_block_size` must be `None` or a positive multiple of the model patch size (32 for this checkpoint). `None` requests a single forward-pass decode; the tutorial uses `768` explicitly. Upstream patches the context in blocks of `patch_size`, so the wrapper left-pads any context whose length is not a multiple of it with masked (unobserved) positions, exactly as the upstream GluonTS adapter does; the applied `context_padding` and `patch_size` are returned with every result. The 2.5B checkpoint is treated as a GPU release-reference path even though the API allows callers to choose another device explicitly.
+`decode_block_size` must be `None` or a positive multiple of the model patch size (32 for this checkpoint). `None` requests a single forward-pass decode; the tutorial uses `768` explicitly. Upstream patches the context in blocks of `patch_size`, so the wrapper left-pads any context whose length is not a multiple of it with masked (unobserved) positions — the upstream scaler and patch embedding are mask-aware, so the pads carry no signal (upstream's own GluonTS adapter truncates to a patch multiple instead); a context shorter than one patch is rejected; the applied `context_padding` and `patch_size` are returned with every result. The 2.5B checkpoint is treated as a GPU release-reference path even though the API allows callers to choose another device explicitly.
 
 ## Tutorial
 

@@ -119,3 +119,12 @@ def test_rejects_decode_block_size_that_is_not_a_patch_multiple():
     pipeline = TotoForecastPipeline(FakeModel(), "cpu")
     with pytest.raises(ValueError, match="multiple of the model patch size"):
         pipeline.forecast(np.arange(64), horizon=4, decode_block_size=100)
+
+
+def test_rejects_context_shorter_than_one_patch(monkeypatch):
+    _stub_torch(monkeypatch)
+    model = FakeModel()
+    model.config = types.SimpleNamespace(patch_size=64)
+    pipeline = TotoForecastPipeline(model, "cpu")
+    with pytest.raises(ValueError, match="at least the model patch size"):
+        pipeline.forecast(np.arange(40), horizon=4)
