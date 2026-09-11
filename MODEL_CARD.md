@@ -12,7 +12,7 @@ base_model: Datadog/Toto-2.0-2.5B
 
 ###### Description
 
-Toto 2.0 is Datadog's time-series foundation-model family for multivariate probabilistic forecasting. This DIMER package initially targets `Datadog/Toto-2.0-2.5B` at immutable revision `51a2812bbe449437c01b79c0e425ed578f335f5b`. Upstream describes a decoder-only u-μP-scaled transformer with alternating temporal/variate attention and a quantile head. This repository performs no adaptation; it adds pinned acquisition, finite target validation, normalized q=0.1–0.9 outputs, q=0.5 median semantics, chronological evaluation, baselines, provenance, and tutorial packaging.
+Toto 2.0 is Datadog's time-series foundation-model family for multivariate probabilistic forecasting. This DIMER package initially targets `Datadog/Toto-2.0-2.5B` at immutable revision `51a2812bbe449437c01b79c0e425ed578f335f5b`. Upstream describes a decoder-only u-μP-scaled transformer with alternating temporal/variate attention and a quantile head. This repository performs no adaptation; it adds pinned acquisition, finite target validation, explicit decode-strategy validation, normalized q=0.1–0.9 outputs, q=0.5 median semantics, chronological evaluation, baselines, provenance, and tutorial packaging.
 
 #### Intended Use and Limitations
 
@@ -27,8 +27,9 @@ Primary users are ML engineers, site-reliability and observability practitioners
 ###### Out-of-scope use cases
 
 1. **Capability boundary:** this repository does not implement Toto 2.0 fine-tuning, exogenous-variable conditioning, classification, anomaly detection, or Toto 1.0's Student-T-mixture interface.
-2. **Input boundary:** the DIMER wrapper requires finite 1D/2D target histories between 32 and 16,384 steps and horizons of 1–4,096; missing-value handling is not enabled in the initial public contract.
-3. **Decision boundary:** forecasts must not autonomously trigger high-consequence actions without validated operational thresholds and human/domain oversight.
+2. **Input boundary:** the DIMER wrapper requires finite 1D/2D target histories between 32 and 16,384 steps and horizons of 1–4,096; missing-value handling is not enabled in the initial public contract. `decode_block_size` must be `None` or a positive integer and invalid values are rejected before model execution.
+3. **Runtime boundary:** the 2.5B release-reference tutorial requires a CUDA GPU; callers choosing other devices own the resulting resource and latency constraints.
+4. **Decision boundary:** forecasts must not autonomously trigger high-consequence actions without validated operational thresholds and human/domain oversight.
 
 #### Factors
 
@@ -42,7 +43,7 @@ Toto may consume series produced by monitoring agents, metrics backends, sensors
 
 ###### Environment
 
-The reference package targets Python 3.12 with `toto-2==2.0.0`, PyTorch 2.7, NumPy 1.26.4, and pandas 2.2.3. The 2.5B checkpoint is roughly 9.8 GB, so a CUDA-capable GPU is the practical release-reference environment; upstream recommends Ampere or newer for optimal execution. The data environment assumes ordered numerical histories representative enough that chronological backtesting is meaningful; abrupt regime changes or novel metric behavior can degrade forecasts.
+The reference package targets Python 3.12 with `toto-2==2.0.0`, PyTorch 2.7, NumPy 1.26.4, and pandas 2.2.3. The 2.5B checkpoint is heavyweight, so a CUDA-capable GPU is the practical release-reference environment; upstream recommends Ampere or newer for optimal execution. The tutorial makes `decode_block_size=768` explicit, while the public API also permits `None` for a single forward-pass decode. The data environment assumes ordered numerical histories representative enough that chronological backtesting is meaningful; abrupt regime changes or novel metric behavior can degrade forecasts.
 
 #### Metrics
 
@@ -70,7 +71,7 @@ This package is not intended, certified, or externally validated for autonomous 
 
 ###### Mitigations
 
-Implemented mitigations include an immutable upstream model revision; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; last-value comparison; machine-readable provenance; unit tests for shape/metric contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
+Implemented mitigations include an immutable upstream model revision; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract; validation that `decode_block_size` is `None` or a positive integer; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
 
 ###### Risks and harms
 
