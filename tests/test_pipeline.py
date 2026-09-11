@@ -3,6 +3,7 @@ import sys
 import types
 
 import numpy as np
+import pytest
 
 from toto_forecasting_pipeline import (
     TotoForecastPipeline,
@@ -40,7 +41,7 @@ class FakeModel:
         return FakeTensor(np.zeros((9, 1, n_variates, horizon)))
 
 
-def test_metrics_and_shape(monkeypatch):
+def _stub_torch(monkeypatch):
     fake_torch = types.SimpleNamespace(
         float32=None,
         bool=None,
@@ -52,9 +53,19 @@ def test_metrics_and_shape(monkeypatch):
     )
     monkeypatch.setitem(sys.modules, "torch", fake_torch)
 
+
+def test_metrics_and_shape(monkeypatch):
+    _stub_torch(monkeypatch)
     pipeline = TotoForecastPipeline(FakeModel(), "cpu")
     result = pipeline.forecast(np.arange(64), horizon=4)
     assert result["median"].shape == (1, 4)
     assert result["quantiles"].shape == (1, 9, 4)
     assert last_value_baseline([1, 2], 2).tolist() == [[2, 2]]
     assert interval_coverage([1, 2], [0, 1], [2, 3]) == 1.0
+
+
+@pytest.mark.parametrize("value", [0, -1, True, 1.5, "768"])
+def test_rejects_invalid_decode_block_size(value):
+    pipeline = TotoForecastPipeline(FakeModel(), "cpu")
+    with pytest.raises(ValueError, match="decode_block_size"):
+        pipeline.forecast(np.arange(64), horizon=4, decode_block_size=value)
