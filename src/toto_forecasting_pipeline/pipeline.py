@@ -13,6 +13,14 @@ MODEL_LICENSE = "Apache-2.0"
 QUANTILES = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
 
 
+def _validate_decode_block_size(value: int | None) -> int | None:
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise ValueError("decode_block_size must be None or a positive integer")
+    return value
+
+
 @dataclass
 class TotoForecastPipeline:
     _model: Any
@@ -41,6 +49,7 @@ class TotoForecastPipeline:
     ) -> dict[str, Any]:
         values = validate_target(target)
         validate_horizon(horizon)
+        decode_block_size = _validate_decode_block_size(decode_block_size)
 
         import torch
 
