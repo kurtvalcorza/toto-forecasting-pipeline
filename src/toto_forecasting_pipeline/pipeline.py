@@ -19,7 +19,7 @@ class TotoForecastPipeline:
     device: str
 
     @classmethod
-    def from_pretrained(cls, device: str | None = None) -> "TotoForecastPipeline":
+    def from_pretrained(cls, device: str | None = None) -> TotoForecastPipeline:
         import torch
         from toto2 import Toto2Model
 
