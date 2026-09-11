@@ -16,14 +16,21 @@ DIMER-oriented zero-shot probabilistic forecasting wrapper for **Datadog Toto 2.
 
 ```python
 from toto_forecasting_pipeline import TotoForecastPipeline
-pipe = TotoForecastPipeline.from_pretrained()
-result = pipe.forecast([1,2,3,4] * 32, horizon=24)
+
+pipe = TotoForecastPipeline.from_pretrained(device="cuda")
+result = pipe.forecast(
+    [1, 2, 3, 4] * 32,
+    horizon=24,
+    decode_block_size=768,
+)
 print(result["median"])
 ```
 
+`decode_block_size` must be `None` or a positive integer. `None` requests a single forward-pass decode; the tutorial uses `768` explicitly. The 2.5B checkpoint is treated as a GPU release-reference path even though the API allows callers to choose another device explicitly.
+
 ## Tutorial
 
-`tutorials/toto_forecasting_colab.ipynb` is `TASK-INFERENCE`. It demonstrates chronological backtesting, last-value baseline, MAE/RMSE, q=0.1–0.9 outputs, optional BYOD, and portable output/provenance files.
+`tutorials/toto_forecasting_colab.ipynb` is `TASK-INFERENCE`. It self-bootstraps in a fresh runtime, validates raw BYOD CSV headers before pandas ingestion, demonstrates chronological backtesting, last-value baseline, MAE/RMSE, q=0.1–0.9 outputs, empirical q10–q90 coverage, and portable output/provenance files.
 
 ## Release status
 
