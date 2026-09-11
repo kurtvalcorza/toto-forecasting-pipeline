@@ -27,7 +27,7 @@ Primary users are ML engineers, site-reliability and observability practitioners
 ###### Out-of-scope use cases
 
 1. **Capability boundary:** this repository does not implement Toto 2.0 fine-tuning, exogenous-variable conditioning, classification, anomaly detection, or Toto 1.0's Student-T-mixture interface.
-2. **Input boundary:** the DIMER wrapper requires finite 1D/2D target histories between 32 and 16,384 steps and horizons of 1–4,096; missing-value handling is not enabled in the initial public contract. `decode_block_size` must be `None` or a positive integer and invalid values are rejected before model execution.
+2. **Input boundary:** the DIMER wrapper requires finite 1D/2D target histories between 32 and 16,384 steps and horizons of 1–4,096; missing-value handling is not enabled in the initial public contract. `decode_block_size` must be `None` or a positive multiple of the 32-step model patch size and invalid values are rejected before model execution; contexts that are not a multiple of the patch size are left-padded with masked positions rather than rejected.
 3. **Runtime boundary:** the 2.5B release-reference tutorial requires a CUDA GPU; callers choosing other devices own the resulting resource and latency constraints.
 4. **Decision boundary:** forecasts must not autonomously trigger high-consequence actions without validated operational thresholds and human/domain oversight.
 
@@ -71,7 +71,7 @@ This package is not intended, certified, or externally validated for autonomous 
 
 ###### Mitigations
 
-Implemented mitigations include an immutable upstream model revision; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract; validation that `decode_block_size` is `None` or a positive integer; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
+Implemented mitigations include an immutable upstream model revision; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract for user data (the only unobserved positions are the wrapper's own left padding, added when the context length is not a multiple of the 32-step model patch size and masked exactly as the upstream GluonTS adapter does); validation that `decode_block_size` is `None` or a positive multiple of the patch size; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
 
 ###### Risks and harms
 

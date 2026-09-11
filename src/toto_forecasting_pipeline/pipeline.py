@@ -50,6 +50,15 @@ class TotoForecastPipeline:
         values = validate_target(target)
         validate_horizon(horizon)
         decode_block_size = _validate_decode_block_size(decode_block_size)
+        patch_size = int(self._model.config.patch_size)
+        if decode_block_size is not None and decode_block_size % patch_size:
+            raise ValueError(
+                f"decode_block_size must be a multiple of the model patch size ({patch_size})"
+            )
+        # Upstream patches the context in blocks of `patch_size` and requires the context length
+        # to be a multiple of it. Like the upstream GluonTS adapter, pad on the left and mark the
+        # padded positions unobserved so they carry no signal into the scaler or attention.
+        context_padding = (patch_size - values.shape[1] % patch_size) % patch_size
 
         import torch
 
@@ -59,6 +68,10 @@ class TotoForecastPipeline:
             device=self.device,
         ).unsqueeze(0)
         target_mask = torch.ones_like(target_tensor, dtype=torch.bool)
+        if context_padding:
+            pad = (context_padding, 0)
+            target_tensor = torch.nn.functional.pad(target_tensor, pad, value=0.0)
+            target_mask = torch.nn.functional.pad(target_mask, pad, value=False)
         series_ids = torch.arange(
             values.shape[0],
             device=self.device,
@@ -73,7 +86,7 @@ class TotoForecastPipeline:
                 },
                 horizon=horizon,
                 decode_block_size=decode_block_size,
-                has_missing_values=False,
+                has_missing_values=context_padding > 0,
             )
         quantiles = np.asarray(forecast.detach().cpu(), dtype=float)
         expected_shape = (len(QUANTILES), 1, values.shape[0], horizon)
@@ -91,6 +104,8 @@ class TotoForecastPipeline:
             "model_revision": MODEL_REVISION,
             "horizon": horizon,
             "context_length": values.shape[1],
+            "context_padding": context_padding,
+            "patch_size": patch_size,
             "n_variates": values.shape[0],
             "decode_block_size": decode_block_size,
         }
