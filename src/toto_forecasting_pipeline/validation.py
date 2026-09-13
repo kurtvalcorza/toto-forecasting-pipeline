@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 
+MIN_CONTEXT = 32  # observations; shorter targets are rejected before any model work
+MAX_CONTEXT = 16_384  # observations per variate
+MAX_HORIZON = 4096  # forecast steps per call
 
-def validate_target(target, *, min_context: int = 32, max_context: int = 16_384) -> np.ndarray:
+
+def validate_target(target, *, min_context: int = MIN_CONTEXT, max_context: int = MAX_CONTEXT) -> np.ndarray:
     values = np.asarray(target, dtype=np.float32)
     if values.ndim == 1:
         values = values[None, :]
@@ -18,7 +22,7 @@ def validate_target(target, *, min_context: int = 32, max_context: int = 16_384)
     return values
 
 
-def validate_horizon(horizon: int, *, max_horizon: int = 4096) -> int:
+def validate_horizon(horizon: int, *, max_horizon: int = MAX_HORIZON) -> int:
     if not isinstance(horizon, int) or not 1 <= horizon <= max_horizon:
         raise ValueError(f"horizon must be an integer from 1 to {max_horizon}")
     return horizon

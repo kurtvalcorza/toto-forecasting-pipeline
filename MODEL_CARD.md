@@ -70,7 +70,7 @@ The reference package targets Python 3.12 with `toto-2==2.0.0`, PyTorch 2.7, tor
 
 ###### Performance Measures
 
-The repository reports `mae` and `rmse` for q=0.5 median point forecasts on a chronological holdout and computes the same measures for a last-value baseline. MAE is directly interpretable in target units, while RMSE emphasizes larger misses. The wrapper also provides `interval_coverage` so users can measure empirical q=0.1–q=0.9 coverage when ground truth exists. Tutorial values are local sample evidence; upstream benchmark rankings are not claimed as reproduced results.
+The repository reports `mae` and `rmse` for q=0.5 median point forecasts on a chronological holdout and computes the same measures for a last-value baseline. The public `evaluation_report` stage writes these measures, the empirical q10–q90 `interval_coverage` and the baseline comparison to a machine-readable report whose verdict is `sample-sanity` on the withheld tutorial holdout and `not-measurable` when no truth is supplied. MAE is directly interpretable in target units, while RMSE emphasizes larger misses. The wrapper also provides `interval_coverage` so users can measure empirical q=0.1–q=0.9 coverage when ground truth exists. Tutorial values are local sample evidence; upstream benchmark rankings are not claimed as reproduced results.
 
 ###### Decision thresholds
 
@@ -92,7 +92,7 @@ This package is not intended, certified, or externally validated for autonomous 
 
 ###### Mitigations
 
-Implemented mitigations include an immutable upstream model revision; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract for user data (the only unobserved positions are the wrapper's own left padding, added when the context length is not a multiple of the 32-step model patch size and masked so the mask-aware upstream scaler and patch embedding ignore it; upstream's own GluonTS adapter truncates to a patch multiple instead); validation that `decode_block_size` is `None` or a positive multiple of the patch size; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
+Implemented mitigations include an immutable upstream model revision; a committed `dimer-base-manifest.json` whose per-file SHA-256 digests `verify_snapshot` re-checks before every load; the public `validate_inputs` stage, which applies the same model-independent target, horizon and decode-block checks as `forecast` and writes an input manifest with any rejection recorded as a finding; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract for user data (the only unobserved positions are the wrapper's own left padding, added when the context length is not a multiple of the 32-step model patch size and masked so the mask-aware upstream scaler and patch embedding ignore it; upstream's own GluonTS adapter truncates to a patch multiple instead); validation that `decode_block_size` is `None` or a positive multiple of the patch size; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
 
 ###### Risks and harms
 
@@ -108,5 +108,6 @@ The pipeline must not be used for unlawful surveillance, social scoring, discrim
 - Revision: `51a2812bbe449437c01b79c0e425ed578f335f5b`
 - Runtime package: `toto-2==2.0.0`
 - Weight format: SafeTensors
+- Snapshot manifest: `weights/toto-2.0-2.5b/dimer-base-manifest.json` — `model.safetensors` SHA-256 `dc08942b20751ac906167194d4ca4aa06b4367e80aabe5f1d5153b30b874bdb9` (9817176960 bytes, from the Hub LFS metadata at the pinned revision)
 - Upstream repository: https://github.com/DataDog/toto
 - Toto 2.0 technical report: https://arxiv.org/abs/2605.20119
