@@ -3,6 +3,8 @@ license: apache-2.0
 model_card_spec: "1.1"
 pipeline_tag: time-series-forecasting
 base_model: Datadog/Toto-2.0-2.5B
+date_published: "2026-04-17"
+date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/Datadog/Toto-2.0-2.5B)"
 ---
 
 # Toto 2.0 2.5B (DIMER package v0.1.0) — Time-Series Foundation Model (Zero-Shot Multivariate Forecasting)
@@ -11,7 +13,6 @@ base_model: Datadog/Toto-2.0-2.5B
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-DataDog%2Ftoto-181717?style=flat&logo=github&logoColor=white)](https://github.com/DataDog/toto)
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2605.20119-b31b1b.svg)](https://arxiv.org/abs/2605.20119)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://huggingface.co/Datadog/Toto-2.0-2.5B)
-[![Pipeline](https://img.shields.io/badge/Pipeline-toto--forecasting--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/toto-forecasting-pipeline)
 
 > [!WARNING]
 > ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
@@ -31,7 +32,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ---
 
-###### Description
+#### Description
 
 Toto 2.0 is Datadog's time-series foundation-model family for multivariate probabilistic forecasting. This DIMER package initially targets `Datadog/Toto-2.0-2.5B` at immutable revision `51a2812bbe449437c01b79c0e425ed578f335f5b`. Upstream describes a decoder-only u-μP-scaled transformer with alternating temporal/variate attention and a quantile head. This repository performs no adaptation; it adds pinned acquisition, finite target validation, explicit decode-strategy validation, normalized q=0.1–0.9 outputs, q=0.5 median semantics, chronological evaluation, baselines, provenance, and tutorial packaging.
 
