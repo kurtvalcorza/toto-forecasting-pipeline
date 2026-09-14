@@ -3,6 +3,8 @@ license: apache-2.0
 model_card_spec: "1.1"
 pipeline_tag: time-series-forecasting
 base_model: Datadog/Toto-2.0-2.5B
+date_published: "2026-04-17"
+date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/Datadog/Toto-2.0-2.5B)"
 ---
 
 # Toto 2.0 2.5B (DIMER package v0.1.0) — Time-Series Foundation Model (Zero-Shot Multivariate Forecasting)
@@ -11,7 +13,6 @@ base_model: Datadog/Toto-2.0-2.5B
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-DataDog%2Ftoto-181717?style=flat&logo=github&logoColor=white)](https://github.com/DataDog/toto)
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2605.20119-b31b1b.svg)](https://arxiv.org/abs/2605.20119)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://huggingface.co/Datadog/Toto-2.0-2.5B)
-[![Pipeline](https://img.shields.io/badge/Pipeline-toto--forecasting--pipeline-2ea44f?style=flat&logo=github)](https://github.com/kurtvalcorza/toto-forecasting-pipeline)
 
 > [!WARNING]
 > ⚠️ **Provided for research, training, and evaluation purposes only.** Model weights are redistributed unmodified under their upstream license, which controls your use, including any commercial use or redistribution; the accompanying code and notebooks are released under this repository's license. All of it is supplied **"as is"**, without warranty of any kind, and has not been validated for production, clinical, or safety-critical use. Running the notebooks downloads third-party weights and datasets governed by their own licenses and consumes compute on your own Colab/Kaggle account. To the maximum extent permitted by law, the maintainers of this repository and the DIMER platform accept no liability for any damages arising from their use. Hosting implies no affiliation with or endorsement by the original authors.
@@ -31,7 +32,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 ---
 
-###### Description
+#### Description
 
 Toto 2.0 is Datadog's time-series foundation-model family for multivariate probabilistic forecasting. This DIMER package initially targets `Datadog/Toto-2.0-2.5B` at immutable revision `51a2812bbe449437c01b79c0e425ed578f335f5b`. Upstream describes a decoder-only u-μP-scaled transformer with alternating temporal/variate attention and a quantile head. This repository performs no adaptation; it adds pinned acquisition, finite target validation, explicit decode-strategy validation, normalized q=0.1–0.9 outputs, q=0.5 median semantics, chronological evaluation, baselines, provenance, and tutorial packaging.
 
@@ -70,7 +71,7 @@ The reference package targets Python 3.12 with `toto-2==2.0.0`, PyTorch 2.7, tor
 
 ###### Performance Measures
 
-The repository reports `mae` and `rmse` for q=0.5 median point forecasts on a chronological holdout and computes the same measures for a last-value baseline. MAE is directly interpretable in target units, while RMSE emphasizes larger misses. The wrapper also provides `interval_coverage` so users can measure empirical q=0.1–q=0.9 coverage when ground truth exists. Tutorial values are local sample evidence; upstream benchmark rankings are not claimed as reproduced results.
+The repository reports `mae` and `rmse` for q=0.5 median point forecasts on a chronological holdout and computes the same measures for a last-value baseline. The public `evaluation_report` stage writes these measures, the empirical q10–q90 `interval_coverage` and the baseline comparison to a machine-readable report whose verdict is `sample-sanity` on the withheld tutorial holdout and `not-measurable` when no truth is supplied. MAE is directly interpretable in target units, while RMSE emphasizes larger misses. The wrapper also provides `interval_coverage` so users can measure empirical q=0.1–q=0.9 coverage when ground truth exists. Tutorial values are local sample evidence; upstream benchmark rankings are not claimed as reproduced results.
 
 ###### Decision thresholds
 
@@ -92,7 +93,7 @@ This package is not intended, certified, or externally validated for autonomous 
 
 ###### Mitigations
 
-Implemented mitigations include an immutable upstream model revision; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract for user data (the only unobserved positions are the wrapper's own left padding, added when the context length is not a multiple of the 32-step model patch size and masked so the mask-aware upstream scaler and patch embedding ignore it; upstream's own GluonTS adapter truncates to a patch multiple instead); validation that `decode_block_size` is `None` or a positive multiple of the patch size; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
+Implemented mitigations include an immutable upstream model revision; a committed `dimer-base-manifest.json` whose per-file SHA-256 digests `verify_snapshot` re-checks before every load; the public `validate_inputs` stage, which applies the same model-independent target, horizon and decode-block checks as `forecast` and writes an input manifest with any rejection recorded as a finding; SafeTensors weights; exact runtime package pins; finite numeric target checks; explicit context/horizon ceilings; a no-missing-values initial serving contract for user data (the only unobserved positions are the wrapper's own left padding, added when the context length is not a multiple of the 32-step model patch size and masked so the mask-aware upstream scaler and patch embedding ignore it; upstream's own GluonTS adapter truncates to a patch multiple instead); validation that `decode_block_size` is `None` or a positive multiple of the patch size; normalized and ordered q=0.1–0.9 outputs; explicit q=0.5 median semantics; chronological tutorial evaluation; raw duplicate CSV-header rejection before pandas ingestion; last-value comparison; machine-readable repository/model provenance; unit tests for shape, metric, and decode contracts; and CI validation that distinguishes source checks from the separate clean-GPU notebook execution evidence required for release.
 
 ###### Risks and harms
 
@@ -108,5 +109,6 @@ The pipeline must not be used for unlawful surveillance, social scoring, discrim
 - Revision: `51a2812bbe449437c01b79c0e425ed578f335f5b`
 - Runtime package: `toto-2==2.0.0`
 - Weight format: SafeTensors
+- Snapshot manifest: `weights/toto-2.0-2.5b/dimer-base-manifest.json` — `model.safetensors` SHA-256 `dc08942b20751ac906167194d4ca4aa06b4367e80aabe5f1d5153b30b874bdb9` (9817176960 bytes, from the Hub LFS metadata at the pinned revision)
 - Upstream repository: https://github.com/DataDog/toto
 - Toto 2.0 technical report: https://arxiv.org/abs/2605.20119

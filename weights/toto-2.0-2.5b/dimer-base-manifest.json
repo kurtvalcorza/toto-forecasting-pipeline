@@ -1,0 +1,25 @@
+{
+  "format": "dimer_hf_snapshot",
+  "formatVersion": 1,
+  "modelKey": "toto-2.0-2.5b",
+  "modelId": "Datadog/Toto-2.0-2.5B",
+  "revision": "51a2812bbe449437c01b79c0e425ed578f335f5b",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 7188,
+      "sha256": "5cd75f3d08d1574c085ee31a2886855d82247f76cb3bd0b8015750a7fc1d316d"
+    },
+    {
+      "path": "config.json",
+      "bytes": 598,
+      "sha256": "172904c65bb5af77a95e1a81cdd9214f4c9d983651d6dceef1375d3d09f47a36"
+    },
+    {
+      "path": "model.safetensors",
+      "bytes": 9817176960,
+      "sha256": "dc08942b20751ac906167194d4ca4aa06b4367e80aabe5f1d5153b30b874bdb9"
+    }
+  ],
+  "totalBytes": 9817184746
+}
