@@ -48,3 +48,7 @@ weights/toto-2.0-2.5b/
 ## Release status
 
 **Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The 2.5B checkpoint is heavyweight; a clean supported GPU execution record of the standalone notebook for the exact PR/release revision is required before release-grade promotion. The earlier local pre-flight run recorded in `docs/release-verification.md` executed the previous (repository-installing) notebook and does not cover the standalone carrier or the manifest-verified snapshot path.
+
+## AI Assistance Disclosure
+
+This tutorial and its accompanying documentation were developed with generative AI assistance for code development and technical writing under maintainer direction. The maintainer remains responsible for reviewing the implementation, validating results, and making release decisions. AI assistance does not constitute independent verification, provider endorsement, or release approval.
