@@ -7,7 +7,7 @@ date_published: "2026-04-17"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/Datadog/Toto-2.0-2.5B)"
 ---
 
-# Toto 2.0 2.5B (DIMER package v0.1.0) — Time-Series Foundation Model (Zero-Shot Multivariate Forecasting)
+# Toto 2.0 2.5B — Time-Series Foundation Model (Zero-Shot Multivariate Forecasting)
 
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Datadog%2FToto--2.0--2.5B-ffcc4d?style=flat)](https://huggingface.co/Datadog/Toto-2.0-2.5B)
 [![Upstream GitHub](https://img.shields.io/badge/Upstream%20GitHub-DataDog%2Ftoto-181717?style=flat&logo=github&logoColor=white)](https://github.com/DataDog/toto)
