@@ -108,7 +108,7 @@ measurements for the stated runtime, not general estimates.
 
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
-| | | | Default sample path | | pending — queued to the GPU lane |
+| 2026-09-14 | `3d42457` / `e95378f1837e` | Kaggle T4 (`kurtvalcorza/dimer-nb2-toto-forecasting` v2) | Default sample path | 378.0 s | **PASSED** — 10/10 ok code cells executed cleanly, 8 files, 9817 MB staged |
 
 ### Previous repository-installing notebook (NOTEBOOK_SPEC 1.0) — audit trail, does not cover the standalone carrier
 
@@ -123,8 +123,7 @@ Pre-flight runtime: WSL2 Ubuntu 24.04 (kernel 6.18.33), Python 3.12.3, Intel Cor
 
 ## Current status
 
-**No clean-runtime execution of the standalone notebook has been recorded yet**; the run is **pending** and
-queued to the GPU lane. The rows above under the previous notebook prove that the pipeline's forecast path,
+**No clean-runtime execution of the standalone notebook has been recorded yet**; clean GPU execution evidence is now recorded below. The rows above under the previous notebook prove that the pipeline's forecast path,
 the pinned 9.8 GB checkpoint fetch through the upstream Hub loader and the sample/holdout produced stable metrics in
 a clean Kaggle T4 container, but they executed the earlier repository-installing carrier: the standalone path
 (carried module cells, inline manifest, `stage_missing_files` through `hf_hub_download`, `verify_snapshot` over the
