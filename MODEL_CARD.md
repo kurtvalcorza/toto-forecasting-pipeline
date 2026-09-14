@@ -2,6 +2,7 @@
 license: apache-2.0
 model_card_spec: "1.1"
 pipeline_tag: time-series-forecasting
+task: "Others - Time-Series Forecasting"
 base_model: Datadog/Toto-2.0-2.5B
 date_published: "2026-04-17"
 date_published_source: "Hugging Face Hub repository creation date of the exact hosted checkpoint (`createdAt`, https://huggingface.co/api/models/Datadog/Toto-2.0-2.5B)"
