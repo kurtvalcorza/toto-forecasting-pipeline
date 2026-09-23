@@ -35,7 +35,7 @@ This pipeline provides a ready-to-run interactive Google Colab notebook that exe
 
 #### Description
 
-Toto 2.0 is Datadog's time-series foundation-model family for multivariate probabilistic forecasting. This DIMER package initially targets `Datadog/Toto-2.0-2.5B` at immutable revision `51a2812bbe449437c01b79c0e425ed578f335f5b`. Upstream describes a decoder-only u-μP-scaled transformer with alternating temporal/variate attention and a quantile head. This repository performs no adaptation; it adds pinned acquisition, finite target validation, explicit decode-strategy validation, normalized q=0.1–0.9 outputs, q=0.5 median semantics, chronological evaluation, baselines, provenance, and tutorial packaging.
+Toto 2.0 is Datadog's time-series foundation-model family for multivariate probabilistic forecasting. This package targets `Datadog/Toto-2.0-2.5B` at immutable revision `51a2812bbe449437c01b79c0e425ed578f335f5b`. Upstream describes a decoder-only u-μP-scaled transformer with alternating temporal/variate attention and a quantile head. This repository performs no adaptation; it adds pinned acquisition, finite target validation, explicit decode-strategy validation, normalized q=0.1–0.9 outputs, q=0.5 median semantics, chronological evaluation, baselines, provenance, and tutorial packaging.
 
 #### Intended Use and Limitations
 
@@ -50,7 +50,7 @@ Primary users are ML engineers, site-reliability and observability practitioners
 ###### Out-of-scope use cases
 
 1. **Capability boundary:** this repository does not implement Toto 2.0 fine-tuning, exogenous-variable conditioning, classification, anomaly detection, or Toto 1.0's Student-T-mixture interface.
-2. **Input boundary:** the DIMER wrapper requires finite 1D/2D target histories between 32 and 16,384 steps and horizons of 1–4,096; missing-value handling is not enabled in the initial public contract. `decode_block_size` must be `None` or a positive multiple of the 32-step model patch size and invalid values are rejected before model execution; contexts that are not a multiple of the patch size are left-padded with masked positions rather than rejected.
+2. **Input boundary:** the pipeline wrapper requires finite 1D/2D target histories between 32 and 16,384 steps and horizons of 1–4,096; missing-value handling is not enabled in the initial public contract. `decode_block_size` must be `None` or a positive multiple of the 32-step model patch size and invalid values are rejected before model execution; contexts that are not a multiple of the patch size are left-padded with masked positions rather than rejected.
 3. **Runtime boundary:** the 2.5B release-reference tutorial requires a CUDA GPU; callers choosing other devices own the resulting resource and latency constraints.
 4. **Decision boundary:** forecasts must not autonomously trigger high-consequence actions without validated operational thresholds and human/domain oversight.
 
@@ -86,7 +86,7 @@ Toto 2.0 directly emits nine predictive quantiles, providing distributional info
 
 ###### Data
 
-Upstream Toto documentation describes large-scale time-series pretraining with a strong observability focus and additional general-purpose data; this repository does not independently enumerate every source record or certify that all upstream data are free of sensitivity concerns. The DIMER repository distributes wrapper code, tests, documentation, and tutorial logic but not the upstream checkpoint or user data. Operators must review operational metrics for personal, proprietary, security-sensitive, customer, or regulated information before processing or sharing outputs.
+Upstream Toto documentation describes large-scale time-series pretraining with a strong observability focus and additional general-purpose data; this repository does not independently enumerate every source record or certify that all upstream data are free of sensitivity concerns. This repository distributes wrapper code, tests, documentation, and tutorial logic but not the upstream checkpoint or user data. Operators must review operational metrics for personal, proprietary, security-sensitive, customer, or regulated information before processing or sharing outputs.
 
 ###### Human Life
 
@@ -102,7 +102,7 @@ Forecast error can cause under- or over-provisioning, missed incidents, unnecess
 
 ###### Use cases
 
-The pipeline must not be used for unlawful surveillance, social scoring, discriminatory allocation, deceptive manipulation, or high-impact automated decisions based solely on unvalidated forecasts. Operators must not present future-leaked backtests or upstream benchmark results as evidence of local predictive validity. Use must comply with the Apache-2.0 model license, source-data terms, privacy and security requirements, and DIMER policy. Forecast outputs must not be represented as guaranteed future outcomes or calibrated certainty.
+The pipeline must not be used for unlawful surveillance, social scoring, discriminatory allocation, deceptive manipulation, or high-impact automated decisions based solely on unvalidated forecasts. Operators must not present future-leaked backtests or upstream benchmark results as evidence of local predictive validity. Use must comply with the Apache-2.0 model license, source-data terms, privacy and security requirements, and the policy of the deployment that runs the pipeline. Forecast outputs must not be represented as guaranteed future outcomes or calibrated certainty.
 
 ## Immutable provenance
 
