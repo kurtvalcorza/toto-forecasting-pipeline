@@ -47,7 +47,7 @@ weights/toto-2.0-2.5b/
 
 ## Release status
 
-**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The 2.5B checkpoint is heavyweight; a clean supported GPU execution record of the standalone notebook for the exact PR/release revision is required before release-grade promotion. The executions recorded in `docs/release-verification.md` ran earlier notebooks: the 2026-09-14 Kaggle T4 run of the previous standalone carrier (/2, in-kernel install) passed only after a runtime restart, and the 2026-09-11 runs executed the repository-installing notebook. None covers the regenerated isolated-environment notebook; a hosted one-pass `Run all` of it is pending.
+**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The 2.5B checkpoint is heavyweight; a clean supported GPU execution record of the standalone notebook for the exact PR/release revision is required before release-grade promotion. The executions recorded in `docs/release-verification.md` ran earlier notebooks: the 2026-09-14 Kaggle T4 run of the previous standalone carrier (/2, in-kernel install) passed only after a runtime restart, and the 2026-09-11 runs executed the repository-installing notebook. None covers the regenerated isolated-environment notebook; its blob `cd551adb6836` (commit `b478bf2`) completed one pass with no restart and 0 errors on a fresh Colab Tesla T4 on 2026-10-10 (Colab CLI 0.7.4 sequential execution, 10/10 code cells, 367.8 s, forecast on `cuda`, peak 9.45 GiB; MAE 0.0732 against last-value 1.108, seasonal naive 0.650, least-squares 0.0363 and noise floor 0.0349); status stays Candidate until an integrator promotes it.
 
 ## AI Assistance Disclosure
 

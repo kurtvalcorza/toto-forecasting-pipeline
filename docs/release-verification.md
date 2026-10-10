@@ -88,6 +88,7 @@ measurements for the stated runtime, not general estimates.
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
 | 2026-09-14 | `3d42457` / `e95378f1837e` (fetched blob verified equal to the committed blob) | Kaggle T4 kernel `kurtvalcorza/dimer-nb2-toto-forecasting` v2, batch run of the committed notebook in the kernel by the fleet pass executor; image `gcr.io/kaggle-gpu-images/python@sha256:37c64f7d…`, Python 3.12.13, 2× Tesla T4 15,360 MiB (driver 580.159.04), clean HF cache; image preloaded numpy 2.0.2, torch 2.10.0+cu128, transformers 5.0.0, huggingface-hub 1.11.0 | Default sample path | 378.0 s (pass 1 225.8 s + pass 2 152.1 s) | **Passed after a restart — not one-pass evidence.** Pass 1 stopped in the install cell at the stale-module guard (`numpy: loaded=2.0.2, installed=1.26.4; packaging: loaded=26.1, installed=24.2. Restart the runtime`); the executor restarted the kernel and pass 2 ran 10/10 code cells (`restarted_after_install_cell: true`). Runtime after install: torch 2.7.0+cu126, numpy 1.26.4, pandas 2.2.3, CUDA on the T4; `verify_snapshot` verified 3 files at `51a2812`, 9,817,184,746 B staged; sample float32 SHA-256 `4129ad3d…`, context 272, horizon 48, `decode_block_size=768`, short-context probe refused; MAE 0.073249 / RMSE 0.088706 vs last-value 1.108021 / 1.310835, q10–q90 coverage 0.822917 (`sample-sanity`); outputs SHA-256: evaluation report `1025a471…`, forecast CSV `b6982d0f…`, input manifest `8b0550d4…`, result JSON `7c95640c…`. Peak CUDA memory and warnings not recorded. |
+| 2026-10-10 (11:47:30 UTC start) | `b478bf22f20e3f99d9a1a03c7487bd9540c8ec3d` / `cd551adb683681d9c35eca0500f838eafcaeeb60` (carried revision `5e400e6f2723`, generator `build_notebook.py/3.0`) | Colab CLI 0.7.4 sequential execution (`colab exec -f`, not a browser Run all; order from `exec.log`, no execution counts), fresh Colab Tesla T4 VM (session `suite-toto-b478bf2-f18d`), committed blob fetched at the commit and checked before the VM was allocated; kernel Python 3.13.15, stage subprocesses in an isolated CPython 3.12.12 environment (81 locked packages, setup 66 s, not reused), `torch 2.7.0`, `toto-2 2.0.0`, forecast on `cuda` (peak 9.451 GiB) | Default sample path, `RUN_ACTIVITY` off | 367.8 s | **PASSED** — one pass, no restart, 0 errors; 10/10 code cells in order; 3 snapshot files digest-verified at `51a2812bbe44`; 2 variates × 320 steps, context 272, horizon 48; MAE 0.0732, RMSE 0.0887, 0.1–0.9 band coverage 0.8229 (nominal 0.8); last-value MAE 1.108, seasonal naive 0.6497, least-squares trend+season 0.0363, noise floor 0.0349; 5 outputs written. Evidence in `docs/execution-evidence/2026-10-10-b478bf2/`: executed notebook SHA-256 `0a7db9fdb20917ad472be8221f70c4aa086246efd029940e242be82194f43bdf`, `run_summary.json` `4a08f2cb8116c6321d2294fe8eab81a8f97e8a145cb0068c54204a830a2a4890`, `exec.log` `bac68c3fd6b6a9a84db44b022343c3b50a20a14911250dbe8a63d3142155c199`. Not exercised: the optional activity, BYOD, a browser Run all |
 
 ### Previous repository-installing notebook (NOTEBOOK_SPEC 1.0) — audit trail, does not cover the standalone carrier
 
@@ -102,12 +103,12 @@ Pre-flight runtime: WSL2 Ubuntu 24.04 (kernel 6.18.33), Python 3.12.3, Intel Cor
 
 ## Current status
 
-**Candidate — verification pending.** No hosted one-pass **Run all** of the regenerated notebook (generator /3, isolated
-environment, NOTEBOOK_SPEC 2.2) has been recorded. The rows above executed earlier notebooks. The 2026-09-14 Kaggle T4
+**Candidate.** The regenerated notebook (generator /3, isolated
+environment, NOTEBOOK_SPEC 2.2) completed one pass with no restart and 0 errors on a fresh Colab Tesla T4 on 2026-10-10 (blob `cd551adb6836`, commit `b478bf2`; the 2026-10-10 row above). The other rows executed earlier notebooks. The 2026-09-14 Kaggle T4
 run of the previous standalone carrier (/2) reached every cell, staged and verified the real 9.8 GB checkpoint and
 reproduced the 2026-09-11 metrics, but only after a kernel restart at its install cell's stale-module guard, so it is not
 one-pass evidence (RUN1, RUN10, ENV6, REL2). The 2026-09-11 rows ran the repository-installing notebook in a fresh
 interpreter. The regenerated notebook installs nothing into the kernel; its isolated environment, stage runner and figure
-have been checked offline only, which is necessary but not sufficient. The registry status remains **Candidate** until a
+ran end to end in the 2026-10-10 Colab T4 row. The registry status remains **Candidate** until a
 reviewer confirms a recorded one-pass run against the notebook blob under review and an integrator promotes it; promotion
 is not performed by the builder.

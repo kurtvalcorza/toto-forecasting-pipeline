@@ -1,0 +1,207 @@
+[colab] Parsing notebook '/home/kurt/colab-runs/toto-forecasting-pipeline-b478bf2-f18d68/toto_forecasting_colab_b478bf2_colab-cli-t4.ipynb'...
+[colab] Executing cell 1/10 - Infrastructure: check the runtime, accelerator and disk; create (or keep) the run directory...
+{'accelerator': 'Tesla T4, 15360 MiB', 'kernel_python': '3.13.15', 'run_directory': '/content/dimer_runs/toto_forecasting/dda52a7e8b26', 'outputs': '/content/outputs', 'weights': '/content/weights', 'environment_root': '/tmp/dimer_uv', 'free_gib': {'weights': 193.3, 'environment': 193.3}}
+[colab] Executing cell 2/10 - Infrastructure: write and verify the carried package, stage runner, lock, manifest and samples...
+{'carried_files': 9, 'verified': True, 'repository': 'kurtvalcorza/toto-forecasting-pipeline', 'revision': '5e400e6f2723fcdddd9e84390cbe194935e6ee00', 'generator': 'build_notebook.py/3.0'}
+[colab] Executing cell 3/10 - Infrastructure: build (or reuse) the isolated locked environment and define the stage runner...
+{'notebook_source': '5e400e6f2723fcdddd9e84390cbe194935e6ee00', 'python': '3.12.12', 'torch': '2.7.0', 'toto-2': '2.0.0', 'numpy': '1.26.4', 'pandas': '2.2.3', 'cuda': True, 'locked_packages': 81, 'environment': '/tmp/dimer_uv/venv-705c668234479c8e', 'environment_reused': False, 'setup_seconds': 66}
+[colab] Executing cell 4/10 - Infrastructure: stage and digest-verify the pinned checkpoint...
+Running stage 'weights' in the isolated environment; log: /content/dimer_runs/toto_forecasting/dda52a7e8b26/logs/weights.log
+{'model_id': 'Datadog/Toto-2.0-2.5B', 'revision': '51a2812bbe449437c01b79c0e425ed578f335f5b', 'license': 'Apache-2.0', 'files': 3, 'total_bytes': 9817184746}
+{'weights_dir': '/content/weights/toto-2.0-2.5b', 'fetched': ['README.md', 'config.json', 'model.safetensors']}
+{'verified': {'path': '/content/weights/toto-2.0-2.5b', 'format': 'dimer_hf_snapshot', 'formatVersion': 1, 'modelKey': 'toto-2.0-2.5b', 'modelId': 'Datadog/Toto-2.0-2.5B', 'revision': '51a2812bbe449437c01b79c0e425ed578f335f5b', 'files': [{'path': 'README.md', 'bytes': 7188, 'sha256': '5cd75f3d08d1574c085ee31a2886855d82247f76cb3bd0b8015750a7fc1d316d'}, {'path': 'config.json', 'bytes': 598, 'sha256': '172904c65bb5af77a95e1a81cdd9214f4c9d983651d6dceef1375d3d09f47a36'}, {'path': 'model.safetensors', 'bytes': 9817176960, 'sha256': 'dc08942b20751ac906167194d4ca4aa06b4367e80aabe5f1d5153b30b874bdb9'}], 'totalBytes': 9817184746}, 'checkpoint': 'model.safetensors', 'note': 'model.safetensors holds tensors only (no pickled code); it is accepted only at the pinned size and SHA-256'}
+[colab] Executing cell 5/10 - toto_forecasting-15...
+Running stage 'data' in the isolated environment; log: /content/dimer_runs/toto_forecasting/dda52a7e8b26/logs/data.log
+{'sample_kind': 'synthetic', 'name': 'synthetic_two_variate_320.csv', 'generator': 'x1 = 0.01·t + sin(t/9) + N(0, 0.04); x2 = 0.5·x1 + cos(t/13) + N(0, 0.04); seed 11', 'shape': [2, 320], 'horizon': 48, 'float32_sha256': '4129ad3d1bfc3e83241591d27f2d8683f1e9203d51a18d6bcc0f3c84f797b7a7'}
+[colab] Executing cell 6/10 - toto_forecasting-18...
+Running stage 'validate' in the isolated environment; log: /content/dimer_runs/toto_forecasting/dda52a7e8b26/logs/validate.log
+{'ceilings': {'MIN_CONTEXT': 32, 'MAX_CONTEXT': 16384, 'MAX_HORIZON': 4096}, 'holdout_offset': 0, 'context_length': 272, 'holdout_steps': [272, 320]}
+{
+  "schema": {
+    "input": "1D array (time) or 2D array (variates, time) of finite numbers, cast to float32",
+    "context_length": [
+      32,
+      16384
+    ],
+    "horizon": [
+      1,
+      4096
+    ],
+    "decode_block_size": "None (single forward-pass decode) or a positive multiple of the model patch size",
+    "model_dependent_checks": "forecast() additionally requires context_length >= patch_size and decode_block_size % patch_size == 0, read from the loaded model config (32 for the pinned checkpoint)",
+    "preprocessing": "context left-padded to the next patch multiple with masked (unobserved) positions; upstream toto2 scales the context causally inside the model"
+  },
+  "inputs": [
+    {
+      "id": "synthetic-trend-season",
+      "context_length": 272,
+      "min": -0.6192461252212524,
+      "max": 3.42222261428833
+    },
+    {
+      "id": "synthetic-coupled-season",
+      "context_length": 272,
+      "min": -1.3610219955444336,
+      "max": 2.6829538345336914
+    }
+  ],
+  "horizon": 48,
+  "decode_block_size": 768,
+  "verdict": "accepted",
+  "findings": [
+    {
+      "input": "short-context-probe",
+      "verdict": "rejected",
+      "message": "context length must be between 32 and 16384"
+    }
+  ],
+  "model_id": "Datadog/Toto-2.0-2.5B",
+  "model_revision": "51a2812bbe449437c01b79c0e425ed578f335f5b"
+}
+{'last_value_baseline': {'mae': 1.108, 'rmse': 1.3108}}
+{'seasonal_naive': {'mae': 0.6497, 'rmse': 0.7234, 'period_steps': 57}}
+{'least_squares_trend_season': {'mae': 0.0363, 'rmse': 0.0479, 'period_steps': [56.5487, 81.6814]}}
+{'noise_floor': {'mae': 0.0349, 'rmse': 0.0467}}
+[colab] Executing cell 7/10 - toto_forecasting-21...
+Running stage 'forecast' in the isolated environment; log: /content/dimer_runs/toto_forecasting/dda52a7e8b26/logs/forecast.log
+/tmp/dimer_uv/venv-705c668234479c8e/lib/python3.12/site-packages/gluonts/json.py:102: UserWarning: Using `json`-module for json-handling. Consider installing one of `orjson`, `ujson` to speed up serialization and deserialization.
+  warnings.warn(
+{'point_forecast': 'median (q=0.5)', 'horizon': 48, 'context_length': 272, 'context_padding': 16, 'patch_size': 32, 'decode_block_size': 768, 'n_variates': 2, 'device': 'cuda', 'source': 'local-snapshot', 'quantile_levels': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], 'peak_cuda_gib': 9.451}
+synthetic-trend-season     step  1  median 1.7760  truth 1.7141  q10 1.7253  q90 1.8279
+synthetic-trend-season     step  2  median 1.8309  truth 1.8193  q10 1.7775  q90 1.8929
+synthetic-trend-season     step  3  median 1.8916  truth 1.9248  q10 1.8347  q90 1.9503
+synthetic-coupled-season   step  1  median 0.3726  truth 0.2699  q10 0.3111  q90 0.4388
+synthetic-coupled-season   step  2  median 0.3372  truth 0.3777  q10 0.2707  q90 0.4067
+synthetic-coupled-season   step  3  median 0.3010  truth 0.4435  q10 0.2291  q90 0.3686
+wrote outputs/toto_forecasting_forecast.png
+<IPython.core.display.Image object>
+
+[Image saved to: /tmp/tmplrlqkogk.png]
+[colab] Executing cell 8/10 - toto_forecasting-24...
+Running stage 'evaluate' in the isolated environment; log: /content/dimer_runs/toto_forecasting/dda52a7e8b26/logs/evaluate.log
+{
+  "task": "zero-shot probabilistic time-series forecasting",
+  "point_forecast": "median (q=0.5)",
+  "score_semantics": "quantile levels 0.1..0.9 are model quantiles, not calibrated confidence intervals",
+  "sample_kind": "synthetic",
+  "horizon": 48,
+  "context_length": 272,
+  "n_variates": 2,
+  "model_id": "Datadog/Toto-2.0-2.5B",
+  "model_revision": "51a2812bbe449437c01b79c0e425ed578f335f5b",
+  "metrics": [
+    {
+      "id": "mae",
+      "value": 0.0732,
+      "estimation": "single chronological holdout, no dispersion estimate"
+    },
+    {
+      "id": "rmse",
+      "value": 0.0887,
+      "estimation": "single chronological holdout, no dispersion estimate"
+    },
+    {
+      "id": "interval_coverage",
+      "band": [
+        0.1,
+        0.9
+      ],
+      "value": 0.8229,
+      "nominal": 0.8,
+      "estimation": "single chronological holdout, no dispersion estimate"
+    }
+  ],
+  "baselines": [
+    {
+      "id": "last_value_baseline",
+      "metrics": [
+        {
+          "id": "mae",
+          "value": 1.108
+        },
+        {
+          "id": "rmse",
+          "value": 1.3108
+        }
+      ]
+    },
+    {
+      "id": "seasonal_naive",
+      "metrics": [
+        {
+          "id": "mae",
+          "value": 0.6497
+        },
+        {
+          "id": "rmse",
+          "value": 0.7234
+        }
+      ],
+      "what": "repeat the last 57 steps (one season)",
+      "period_steps": 57
+    },
+    {
+      "id": "least_squares_trend_season",
+      "metrics": [
+        {
+          "id": "mae",
+          "value": 0.0363
+        },
+        {
+          "id": "rmse",
+          "value": 0.0479
+        }
+      ],
+      "what": "level + linear trend + one sine/cosine pair per season, fitted to the context by least squares",
+      "period_steps": [
+        56.5487,
+        81.6814
+      ],
+      "period_source": "the generator's own seasons (sin(t/9), cos(t/13)): an informed reference, not a naive baseline"
+    }
+  ],
+  "verdict": "sample-sanity",
+  "reason": "one chronological holdout of 48 step(s) on the tutorial sample; not a benchmark",
+  "needs": "repeated holdouts over representative periods of the deployment series for any generalisable claim",
+  "per_variate": [
+    {
+      "variate": "synthetic-trend-season",
+      "mae": 0.0513,
+      "rmse": 0.0613
+    },
+    {
+      "variate": "synthetic-coupled-season",
+      "mae": 0.0952,
+      "rmse": 0.1094
+    }
+  ],
+  "holdout": {
+    "offset_from_end": 0,
+    "context_length": 272
+  },
+  "reference_points": [
+    {
+      "id": "noise_floor",
+      "metrics": [
+        {
+          "id": "mae",
+          "value": 0.0349
+        },
+        {
+          "id": "rmse",
+          "value": 0.0467
+        }
+      ],
+      "what": "the error of the exact noiseless generator on the holdout: no forecaster can expect to beat it"
+    }
+  ],
+  "coverage_granularity": "q10\u2013q90 coverage over 96 holdout point(s) moves in steps of 1/96 = 0.0104",
+  "interpretation": "Toto median MAE 0.0732 vs last-value 1.1080, seasonal-naive 0.6497 and least-squares trend + season 0.0363; noise floor 0.0349: the model is well ahead of the naive baselines, but a fit that knows the generator's two seasons sits near the floor, so the margin over last-value mostly shows how weak a flat forecast is on a trending seasonal series"
+}
+[colab] Executing cell 9/10 - toto_forecasting-27...
+Running stage 'export' in the isolated environment; log: /content/dimer_runs/toto_forecasting/dda52a7e8b26/logs/export.log
+{'rows': 96, 'columns': ['variate', 'step', 'timestamp', 'median', 'truth', 'last_value_baseline', 'seasonal_naive', 'least_squares_trend_season', 'q10', 'q20', 'q30', 'q40', 'q50', 'q60', 'q70', 'q80', 'q90'], 'runtime': {'python': '3.12.12', 'torch': '2.7.0', 'toto-2': '2.0.0', 'numpy': '1.26.4', 'pandas': '2.2.3', 'device': 'cuda', 'peak_cuda_gib': 9.451}}
+['toto_forecasting_evaluation_report.json', 'toto_forecasting_forecast.csv', 'toto_forecasting_forecast.png', 'toto_forecasting_input_manifest.json', 'toto_forecasting_result.json']
+[colab] Executing cell 10/10 - toto_forecasting-29...
+Optional activity skipped: tick RUN_ACTIVITY to run it. The canonical outputs are complete.
+[colab] Saving notebook with outputs to '/home/kurt/colab-runs/toto-forecasting-pipeline-b478bf2-f18d68/toto_forecasting_colab_b478bf2_colab-cli-t4_output.ipynb'...
