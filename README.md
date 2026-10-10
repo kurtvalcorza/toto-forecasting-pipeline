@@ -47,7 +47,7 @@ weights/toto-2.0-2.5b/
 
 ## Release status
 
-**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The 2.5B checkpoint is heavyweight; a clean supported GPU execution record of the standalone notebook for the exact PR/release revision is required before release-grade promotion. The earlier local pre-flight run recorded in `docs/release-verification.md` executed the previous (repository-installing) notebook and does not cover the standalone carrier or the manifest-verified snapshot path.
+**Candidate.** Static/unit checks do not constitute clean-runtime notebook evidence. The 2.5B checkpoint is heavyweight; a clean supported GPU execution record of the standalone notebook for the exact PR/release revision is required before release-grade promotion. The executions recorded in `docs/release-verification.md` ran earlier notebooks: the 2026-09-14 Kaggle T4 run of the previous standalone carrier (/2, in-kernel install) passed only after a runtime restart, and the 2026-09-11 runs executed the repository-installing notebook. None covers the regenerated isolated-environment notebook; a hosted one-pass `Run all` of it is pending.
 
 ## AI Assistance Disclosure
 

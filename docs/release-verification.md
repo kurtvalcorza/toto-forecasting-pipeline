@@ -87,7 +87,7 @@ measurements for the stated runtime, not general estimates.
 
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
-| 2026-09-14 | `3d42457` / `e95378f1837e` | Kaggle T4 (`kurtvalcorza/dimer-nb2-toto-forecasting` v2) | Default sample path | 378.0 s | **PASSED** — 10/10 ok code cells executed cleanly, 8 files, 9817 MB staged |
+| 2026-09-14 | `3d42457` / `e95378f1837e` (fetched blob verified equal to the committed blob) | Kaggle T4 kernel `kurtvalcorza/dimer-nb2-toto-forecasting` v2, batch run of the committed notebook in the kernel by the fleet pass executor; image `gcr.io/kaggle-gpu-images/python@sha256:37c64f7d…`, Python 3.12.13, 2× Tesla T4 15,360 MiB (driver 580.159.04), clean HF cache; image preloaded numpy 2.0.2, torch 2.10.0+cu128, transformers 5.0.0, huggingface-hub 1.11.0 | Default sample path | 378.0 s (pass 1 225.8 s + pass 2 152.1 s) | **Passed after a restart — not one-pass evidence.** Pass 1 stopped in the install cell at the stale-module guard (`numpy: loaded=2.0.2, installed=1.26.4; packaging: loaded=26.1, installed=24.2. Restart the runtime`); the executor restarted the kernel and pass 2 ran 10/10 code cells (`restarted_after_install_cell: true`). Runtime after install: torch 2.7.0+cu126, numpy 1.26.4, pandas 2.2.3, CUDA on the T4; `verify_snapshot` verified 3 files at `51a2812`, 9,817,184,746 B staged; sample float32 SHA-256 `4129ad3d…`, context 272, horizon 48, `decode_block_size=768`, short-context probe refused; MAE 0.073249 / RMSE 0.088706 vs last-value 1.108021 / 1.310835, q10–q90 coverage 0.822917 (`sample-sanity`); outputs SHA-256: evaluation report `1025a471…`, forecast CSV `b6982d0f…`, input manifest `8b0550d4…`, result JSON `7c95640c…`. Peak CUDA memory and warnings not recorded. |
 
 ### Previous repository-installing notebook (NOTEBOOK_SPEC 1.0) — audit trail, does not cover the standalone carrier
 
@@ -102,17 +102,12 @@ Pre-flight runtime: WSL2 Ubuntu 24.04 (kernel 6.18.33), Python 3.12.3, Intel Cor
 
 ## Current status
 
-**No clean-runtime execution of the standalone notebook has been recorded yet**; clean GPU execution evidence is now recorded below. The rows above under the previous notebook prove that the pipeline's forecast path,
-the pinned 9.8 GB checkpoint fetch through the upstream Hub loader and the sample/holdout produced stable metrics in
-a clean Kaggle T4 container, but they executed the earlier repository-installing carrier: the standalone path
-(carried module cells, inline manifest, `stage_missing_files` through `hf_hub_download`, `verify_snapshot` over the
-real checkpoint, and `Toto2Model.from_pretrained` on the verified directory) has been validated statically only
-(parity PASS, carrier probe with the repository package blocked) and never run. Two facts a reviewer should weigh:
-the manifest's `model.safetensors` SHA-256 was taken from the Hub's LFS metadata at the pinned revision, not
-computed from a local copy (the checkpoint is not kept on the build machine), so the clean run is the first time
-that digest is checked against downloaded bytes; and `from_pretrained(weights_dir=...)` was exercised only with a
-stubbed `Toto2Model` — the local-directory loading path of `toto-2==2.0.0` was inspected in upstream source, not
-executed. Static validation (`tools/validate_release_assets.py`), nbformat validation, a `compile()` sweep over every
-code cell, and the offline unit suite passed on the tutorial source at the candidate revision, which is necessary but
-not sufficient. The registry status remains **Candidate** until a reviewer confirms a recorded run against the
-notebook blob under review and an integrator promotes it; promotion is not performed by the builder.
+**Candidate — verification pending.** No hosted one-pass **Run all** of the regenerated notebook (generator /3, isolated
+environment, NOTEBOOK_SPEC 2.2) has been recorded. The rows above executed earlier notebooks. The 2026-09-14 Kaggle T4
+run of the previous standalone carrier (/2) reached every cell, staged and verified the real 9.8 GB checkpoint and
+reproduced the 2026-09-11 metrics, but only after a kernel restart at its install cell's stale-module guard, so it is not
+one-pass evidence (RUN1, RUN10, ENV6, REL2). The 2026-09-11 rows ran the repository-installing notebook in a fresh
+interpreter. The regenerated notebook installs nothing into the kernel; its isolated environment, stage runner and figure
+have been checked offline only, which is necessary but not sufficient. The registry status remains **Candidate** until a
+reviewer confirms a recorded one-pass run against the notebook blob under review and an integrator promotes it; promotion
+is not performed by the builder.

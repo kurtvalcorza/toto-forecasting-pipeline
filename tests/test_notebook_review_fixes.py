@@ -361,3 +361,31 @@ def test_m3_holdout_offset_and_context_length_are_form_fields(tmp_path) -> None:
 def test_m4_gpu_prerequisite_is_stated_as_measured() -> None:
     md = _md()
     assert "A 15 GB T4 is enough" in md and "9.45 GiB" in md and "at least 16 GB" not in md
+
+
+def test_stage_processes_import_neither_ipython_nor_google_colab() -> None:
+    """Stages run in the isolated environment, which has neither IPython nor google.colab: only kernel cells may use
+    them (the figure display and the BYOD upload dialog). A carried module that imported either would fail on Colab;
+    there is no worker and no google.colab stub to give a ModuleSpec (swin2sr-x4-super-resolution-pipeline 34eac6c
+    pattern)."""
+    build = _load("tot_build_notebook_carried", TOOLS / "build_notebook.py")
+    template = build.load_template(TOOLS / "notebook_template.py")
+    carried = [ROOT / source for dest, source in build.carried_sources(ROOT, template).items() if dest.endswith(".py")]
+    assert any(path.name == "tutorial_stages.py" for path in carried)
+    assert any(path.name == "pipeline.py" for path in carried)
+    offenders = [str(path) for path in carried if re.search(r"^\s*(from|import)\s+(IPython|google)\b", path.read_text(encoding="utf-8"), re.M)]
+    assert not offenders, offenders
+    text = NB.read_text(encoding="utf-8")
+    assert "sys.modules['google" not in text and 'sys.modules[\\"google' not in text and "_WORKER_SOURCE" not in text
+
+
+def test_m4_status_records_agree_that_one_pass_run_all_is_pending() -> None:
+    """TOT-m4: the 2026-09-14 Kaggle run of the previous notebook passed only after a restart, so no document may call
+    Run all verified; STATUS.md cites the spec the notebook declares, and the run row records the restart."""
+    status = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    registry = (ROOT / "tutorials" / "README.md").read_text(encoding="utf-8")
+    record = (ROOT / "docs" / "release-verification.md").read_text(encoding="utf-8")
+    assert "Specification 2.2" in status and "Specification 1.1" not in status
+    assert "verified — clean-runtime" not in registry and "| pending — no hosted one-pass `Run all`" in registry
+    assert "Passed after a restart — not one-pass evidence." in record and "restarted_after_install_cell: true" in record
+    assert "No clean-runtime execution of the standalone notebook has been recorded yet" not in record
