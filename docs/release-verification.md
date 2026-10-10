@@ -1,99 +1,78 @@
 # Release verification
 
-`tutorials/toto_forecasting_colab.ipynb` (`TASK-INFERENCE`, **standalone** carrier) is a **release
-candidate** until the exact notebook revision has executed top-to-bottom in a clean supported runtime.
-Unit tests, JSON validation, code-cell compilation, and `tools/validate_release_assets.py` are necessary
-checks but are **not** runtime evidence under DIMER Notebook Specification 1.1. This file is the
-durable release-gate record for the notebook.
+`tutorials/toto_forecasting_colab.ipynb` (`TASK-INFERENCE`, `GUIDED`, **standalone** carrier, generator /3) is a
+**release candidate** until the exact notebook revision has executed top-to-bottom in a clean supported runtime with one
+**Run all** in the notebook kernel. Unit tests, JSON validation, code-cell compilation, and
+`tools/validate_release_assets.py` are necessary checks but are **not** runtime evidence under DIMER Notebook
+Specification 2.2. This file is the durable release-gate record for the notebook. The executions recorded below ran the
+previous (/2, in-kernel install) notebook; they do not carry over to the regenerated notebook.
 
 ## Automatic coverage (static, every pull request)
 
 CI runs `tools/validate_release_assets.py`, which checks:
 
-- notebook JSON parses; every code cell compiles as plain Python (no `%`/`!` magics); no
-  persisted outputs or execution counts; no unresolved placeholder markers; every code cell
-  is preceded by an explanatory markdown cell;
-- exactly one tutorial notebook, named in `tutorials/README.md` with its `TASK-INFERENCE`
-  profile, the notebook-spec version and the standalone carrier; `metadata.dimer` declares that profile, spec `1.1`,
-  `standalone: true` and `generated_from` (repository, generating revision, the carried modules, their concatenated
-  SHA-256, generator);
-- the standalone carrier (ST1–ST6, PAR1–PAR3): no clone, repository install or repository import on the
-  primary path; one cell tagged `embedded_module` per carried module (`src/toto_forecasting_pipeline/evaluation.py`,
-  `validation.py`, `pipeline.py`, in dependency order), each equal to the module after the generator's documented
-  rewrites (working-directory-relative weights directory; package-relative imports removed); the inline `MANIFEST`
-  equal to the committed snapshot manifest and the inline `PINS` equal to the `pyproject.toml` runtime pins; the
-  notebook byte-identical to `tools/build_notebook.py` output; the pinned-install cell with its restart-on-stale-import
-  guard; `NOTEBOOK_SOURCE` recorded in exports;
-- `MODEL_ID`/`MODEL_REVISION` are bound only in the carried module cells (and repeated in the inline manifest,
-  which the notebook asserts against the module before fetching), the revision is a 40-hex immutable commit, and the
-  same identity string appears in `README.md`, `MODEL_CARD.md`, and `docs/WEIGHTS.md` with no stray revisions;
-- the profile-specific public-API calls (`stage_missing_files`, `verify_snapshot`,
-  `TotoForecastPipeline.from_pretrained(device='cuda', weights_dir=...)`, `validate_inputs`, `forecast`,
-  `evaluation_report`, `last_value_baseline`), the ceiling print (`MIN_CONTEXT`, `MAX_CONTEXT`, `MAX_HORIZON`), the
-  chronological holdout (`context = series[:, :-HORIZON]`, `truth = series[:, -HORIZON:]`), `DECODE_BLOCK_SIZE = 768`,
-  the padding/patch-size provenance, the exports, the learner-facing forecasting statements (median semantics, model
-  quantiles are not confidence intervals, last-value baseline, no fine-tuning, GPU requirement) and the gated-off BYOD
-  default listed in the validator; forbidden patterns (credential-in-URL, any `git clone` / `github.com` / repository
-  import on the primary path, a mutable `revision='main'`, direct `toto2` / `safetensors` / `huggingface_hub` use
-  **outside the carried module cells**, any worker process or subprocess outside the generator-owned install cell,
-  `trust_remote_code=True`, `pickle.load`, `torch.load(`, `extractall(`);
-- `STATUS.md`, `README.md` and `tutorials/README.md` agree on one release-status token and no
-  document makes an unsupported release-grade, production-readiness or benchmark claim;
+- notebook JSON parses; every code cell compiles as plain Python (no `%`/`!` magics); no persisted outputs or execution
+  counts; no unresolved placeholder markers (including template braces in markdown); every code cell is preceded by an
+  explanatory markdown cell;
+- exactly one tutorial notebook, named in `tutorials/README.md` with its `TASK-INFERENCE` profile, the spec version
+  (`2.2`) and the standalone carrier; `metadata.dimer` declares the profile, mode `GUIDED`, `standalone: true` and
+  `generated_from` (repository, generating revision, package paths and SHA-256, carried-file digests, generator
+  `build_notebook.py/3.0`);
+- the standalone carrier and isolated environment (ST1–ST6, PAR1–PAR3, RUN1, RUN10, ENV6): one carrier cell whose
+  carried files equal the repository files (`src/toto_forecasting_pipeline/{__init__,evaluation,pipeline,validation}.py`,
+  the stage runner, `tutorials/requirements-colab.lock.txt`, the 3-file snapshot manifest, `LICENSE`) with matching
+  digests; the lock pins every `pyproject.toml` runtime pin with hashes; a pinned `uv` builds a managed-CPython
+  environment with `--require-hashes`, reused per lock digest; no in-kernel install and no restart instruction; Section 1
+  stops on a CPU-only runtime; the four Infrastructure cells are titled and collapsed; every learner cell runs a stage;
+  the notebook byte-identical to `tools/build_notebook.py` output;
+- the stage-runner markers (staging and verification, the synthetic generator, the BYOD header, encoding, delimiter,
+  numeric, timestamp and trim checks, the movable chronological holdout, `validate_inputs` with the short-context probe,
+  the last-value, seasonal-naive and least-squares trend + season references and the noise floor, `forecast` with the
+  figure, `evaluation_report` with the references, per-variate errors and coverage granularity, the export with
+  timestamps, the provenance record), the form-parameter defaults (calls that appear only in comments do not count), no
+  quality `assert`, and the forbidden patterns (credential-in-URL, any clone or repository import on the primary path, a
+  mutable revision, model-library use in the notebook's own cells, `trust_remote_code=True`, `pickle.load`, `torch.load(`,
+  `extractall(`);
+- `STATUS.md`, `README.md` and `tutorials/README.md` agree on one release-status token and no document makes an
+  unsupported release-grade, production-readiness or benchmark claim;
 - `MODEL_CARD.md` front matter, single H1, required heading order, and immutable provenance.
 
-CI also runs `ruff`, `tools/build_notebook.py --check`, and the offline unit suite (`tests/test_pipeline.py`,
-`tests/test_snapshot.py`, `tests/test_role_helpers.py`, `tests/test_notebook_parity.py`, `tests/test_release_assets.py`;
-stubbed `toto2`/`torch`, no weights). These are source/provenance and unit checks. They are **not** execution evidence.
+CI also runs `ruff`, `tools/build_notebook.py --check`, and the offline unit suite (`tests/`; stubbed `toto2`, no weights),
+including `tests/test_release_assets.py` (negative controls proving the validator discriminates) and
+`tests/test_notebook_review_fixes.py` (the notebook's own cells with stand-ins, and the model-free stages). These are source
+and unit checks. They are **not** execution evidence.
 
 ## Executor paths
 
 | Path | Runtime | Role |
 |---|---|---|
-| Google Colab (supported user path) | Colab CUDA runtime with ≥16 GB GPU memory | The runtime the tutorial is written for; a clean top-to-bottom run here is promotion evidence |
-| Kaggle CLI kernel | Kaggle GPU kernel (Tesla T4 15 GB has sufficed for the previous notebook: peak 9.45 GiB), Python 3.12 image | Reproducible clean-room executor of the same class; the notebook is pushed verbatim plus one leading shim cell that provides `google.colab` and chdirs to a scratch directory (no repository checkout is needed — the notebook is standalone) |
-| Kaggle CLI kernel, fresh-interpreter harness | Same Kaggle container; the committed notebook is executed verbatim, cell by cell, by `run_nb.py` in a subprocess of the container Python | Used when the kernel pre-imports a distribution the pinned install replaces (numpy 2.0.2 vs the pinned 1.26.4): the stale-import guard correctly halts the in-kernel path, so the verbatim notebook runs in a fresh interpreter instead; the evidence cell proves the executed file equals the committed blob |
-| Local WSL harness (pre-flight only) | Workstation RTX 5070 Ti (12 GB; needs a cu128 torch build for sm_120 — a version-equal deviation from the pinned PyPI wheel) | Builder pre-flight to catch defects before spending cloud runs; **not** a supported runtime and not promotion evidence |
+| Google Colab (supported user path) | Colab T4 runtime (15 GB is enough; the previous notebook peaked at 9.45 GiB); any kernel Python — the stages run on the isolated environment's CPython 3.12.12 | The runtime the tutorial is written for; a clean one-pass **Run all** in the notebook kernel is promotion evidence |
+| Kaggle notebook kernel | Kaggle GPU kernel; the committed notebook run verbatim with **Run all** (no repository checkout) | Reproducible clean-room executor of the same class; the kernel's preloaded numpy no longer matters, because nothing is installed into the kernel |
+| Local harness (pre-flight only) | Workstation, sequential cell executor, stand-ins | Builder pre-flight to catch defects before spending cloud runs; **not** a supported runtime and not promotion evidence |
 
 ## Supported release verification procedure
 
 Before changing the registry status from `Candidate` to `Release-grade`:
 
 1. resolve the exact PR/commit head under review and confirm static CI is green;
-2. open that exact notebook revision in a new CUDA GPU runtime (Colab, or the Kaggle executor above) with
-   **no repository checkout** and a clean model cache;
-3. run the notebook top-to-bottom without editing implementation cells (form parameters at their
-   defaults for the sample path: `USE_BYOD = False`);
-4. verify that Section 1 reports `NOTEBOOK_SOURCE.repository_revision` equal to the revision recorded in
-   `metadata.dimer.generated_from`, `cuda: True`, and that the installed core package versions equal the inline
-   `PINS` (= `pyproject.toml`);
-5. verify every default-path stage completes:
-   - pinned runtime installed from the inline `PINS` with no GitHub access;
-   - the three carried module cells execute (define `TotoForecastPipeline`, `validate_inputs`, `evaluation_report`,
-     the metric helpers and the ceilings) with no import of the repository package;
-   - pinned `Datadog/Toto-2.0-2.5B` acquisition at the immutable revision through the package: the inline `MANIFEST` is
-     asserted against the module identity and written to `weights/toto-2.0-2.5b/`, `stage_missing_files(WEIGHTS_DIR,
-     allow_download=True)` reports all three manifest entries (`README.md`, `config.json`, `model.safetensors`) on a
-     clean runtime, `verify_snapshot` returns the manifest dict **after hashing the real 9.8 GB checkpoint against the
-     Hub-derived digest — the first time that digest is checked against bytes anywhere**, and
-     `from_pretrained(device='cuda', weights_dir=WEIGHTS_DIR)` reports `source == 'local-snapshot'`;
-   - deterministic two-variate synthetic sample (320 steps, seed 11) with its float32 SHA-256 printed, the ceilings
-     surfaced, the final 48 steps withheld chronologically and the last-value baseline computed from the context;
-   - `validate_inputs` writes `outputs/toto_forecasting_input_manifest.json` (verdict `accepted`, one recorded
-     rejection finding from the short-context probe);
-   - zero-shot forecast through `forecast(context, horizon=HORIZON, decode_block_size=DECODE_BLOCK_SIZE)` with
-     q=0.1–0.9 outputs, `point_forecast == 'median (q=0.5)'`, context 272 left-padded by 16 to 288, horizon 48,
-     `decode_block_size=768`;
-   - `evaluation_report` writes `outputs/toto_forecasting_evaluation_report.json` with verdict `sample-sanity`
-     carrying `mae`, `rmse`, `interval_coverage` and the `last_value_baseline` comparison (the previous notebook's
-     runs recorded MAE 0.073249 / RMSE 0.088706 vs baseline 1.108021 / 1.310835 and coverage 0.822917 on the same
-     sample and holdout; the standalone path must be measured, not assumed to reproduce them);
-   - `outputs/toto_forecasting_result.json` and `outputs/toto_forecasting_forecast.csv` written with
-     `NOTEBOOK_SOURCE`, model revision, model licence, runtime versions, GPU device and decode strategy;
-6. verify the exports exist and the interpretation section matches the observed path;
-7. record the notebook Git blob id, commit, runtime (platform, Python, PyTorch, toto-2, GPU), model identifier
-   and immutable revision, whether the model cache was clean, outcome, produced outputs, peak CUDA allocation, and
-   any warning or applicable `SHOULD` deviation in the table below;
-8. record no access tokens or other secrets.
+2. open that exact notebook revision in a new GPU runtime (Colab T4, or a Kaggle GPU kernel) with **no repository
+   checkout** and a clean model cache;
+3. choose **Run all** once with the defaults (`USE_BYOD = False`, `HORIZON = 48`, `HOLDOUT_OFFSET = 0`,
+   `CONTEXT_LENGTH = 0`, `SEASON_PERIOD = 0.0`, `RUN_ACTIVITY = False`); no restart is expected; then re-run the export
+   cell (Section 8) once;
+4. verify the carried-file verification and the isolated environment's versions (CPython 3.12.12, `torch` 2.7.0,
+   `toto-2` 2.0.0, `numpy` 1.26.4, `pandas` 2.2.3); the 3-file snapshot staged and verified (9.8 GB); the synthetic
+   sample's float32 SHA-256 `4129ad3d…`; context 272 (padded by 16) / horizon 48; the input manifest with the short-context
+   refusal; last-value MAE 1.1080 / RMSE 1.3108, seasonal-naive 0.6497 / 0.7234, the trend + season reference
+   0.0363 / 0.0479 and the noise floor 0.0349 / 0.0467; the forecast on the GPU with `point_forecast == 'median (q=0.5)'`,
+   the peak CUDA memory and the figure; the evaluation report (`sample-sanity`, the model's MAE / RMSE and per-variate rows
+   — the previous notebook's runs recorded 0.073249 / 0.088706 and coverage 0.822917 on the same sample; the regenerated
+   path must be measured, not assumed to reproduce them — coverage granularity, the interpretation line); the CSV (with
+   the `timestamp` column) and result JSON with source, model identity, licence, runtime and peak memory;
+5. record the notebook Git blob id, commit, executor (**Run all** in the notebook kernel), `restarted: false`, runtime
+   (platform, GPU, Python, PyTorch, toto-2), model identifier and immutable revision, whether the model cache was clean,
+   outcome, metrics, peak CUDA memory and outputs in the table below;
+6. record no access tokens or other secrets.
 
 A known-failing default path in the supported runtime blocks release.
 
@@ -108,7 +87,8 @@ measurements for the stated runtime, not general estimates.
 
 | Date (UTC) | Commit / notebook blob | Executor | Path exercised | Wall | Outcome |
 |---|---|---|---|---|---|
-| 2026-09-14 | `3d42457` / `e95378f1837e` | Kaggle T4 (`kurtvalcorza/dimer-nb2-toto-forecasting` v2) | Default sample path | 378.0 s | **PASSED** — 10/10 ok code cells executed cleanly, 8 files, 9817 MB staged |
+| 2026-09-14 | `3d42457` / `e95378f1837e` (fetched blob verified equal to the committed blob) | Kaggle T4 kernel `kurtvalcorza/dimer-nb2-toto-forecasting` v2, batch run of the committed notebook in the kernel by the fleet pass executor; image `gcr.io/kaggle-gpu-images/python@sha256:37c64f7d…`, Python 3.12.13, 2× Tesla T4 15,360 MiB (driver 580.159.04), clean HF cache; image preloaded numpy 2.0.2, torch 2.10.0+cu128, transformers 5.0.0, huggingface-hub 1.11.0 | Default sample path | 378.0 s (pass 1 225.8 s + pass 2 152.1 s) | **Passed after a restart — not one-pass evidence.** Pass 1 stopped in the install cell at the stale-module guard (`numpy: loaded=2.0.2, installed=1.26.4; packaging: loaded=26.1, installed=24.2. Restart the runtime`); the executor restarted the kernel and pass 2 ran 10/10 code cells (`restarted_after_install_cell: true`). Runtime after install: torch 2.7.0+cu126, numpy 1.26.4, pandas 2.2.3, CUDA on the T4; `verify_snapshot` verified 3 files at `51a2812`, 9,817,184,746 B staged; sample float32 SHA-256 `4129ad3d…`, context 272, horizon 48, `decode_block_size=768`, short-context probe refused; MAE 0.073249 / RMSE 0.088706 vs last-value 1.108021 / 1.310835, q10–q90 coverage 0.822917 (`sample-sanity`); outputs SHA-256: evaluation report `1025a471…`, forecast CSV `b6982d0f…`, input manifest `8b0550d4…`, result JSON `7c95640c…`. Peak CUDA memory and warnings not recorded. |
+| 2026-10-10 (11:47:30 UTC start) | `b478bf22f20e3f99d9a1a03c7487bd9540c8ec3d` / `cd551adb683681d9c35eca0500f838eafcaeeb60` (carried revision `5e400e6f2723`, generator `build_notebook.py/3.0`) | Colab CLI 0.7.4 sequential execution (`colab exec -f`, not a browser Run all; order from `exec.log`, no execution counts), fresh Colab Tesla T4 VM (session `suite-toto-b478bf2-f18d`), committed blob fetched at the commit and checked before the VM was allocated; kernel Python 3.13.15, stage subprocesses in an isolated CPython 3.12.12 environment (81 locked packages, setup 66 s, not reused), `torch 2.7.0`, `toto-2 2.0.0`, forecast on `cuda` (peak 9.451 GiB) | Default sample path, `RUN_ACTIVITY` off | 367.8 s | **PASSED** — one pass, no restart, 0 errors; 10/10 code cells in order; 3 snapshot files digest-verified at `51a2812bbe44`; 2 variates × 320 steps, context 272, horizon 48; MAE 0.0732, RMSE 0.0887, 0.1–0.9 band coverage 0.8229 (nominal 0.8); last-value MAE 1.108, seasonal naive 0.6497, least-squares trend+season 0.0363, noise floor 0.0349; 5 outputs written. Evidence in `docs/execution-evidence/2026-10-10-b478bf2/`: executed notebook SHA-256 `0a7db9fdb20917ad472be8221f70c4aa086246efd029940e242be82194f43bdf`, `run_summary.json` `4a08f2cb8116c6321d2294fe8eab81a8f97e8a145cb0068c54204a830a2a4890`, `exec.log` `bac68c3fd6b6a9a84db44b022343c3b50a20a14911250dbe8a63d3142155c199`. Not exercised: the optional activity, BYOD, a browser Run all |
 
 ### Previous repository-installing notebook (NOTEBOOK_SPEC 1.0) — audit trail, does not cover the standalone carrier
 
@@ -123,17 +103,12 @@ Pre-flight runtime: WSL2 Ubuntu 24.04 (kernel 6.18.33), Python 3.12.3, Intel Cor
 
 ## Current status
 
-**No clean-runtime execution of the standalone notebook has been recorded yet**; clean GPU execution evidence is now recorded below. The rows above under the previous notebook prove that the pipeline's forecast path,
-the pinned 9.8 GB checkpoint fetch through the upstream Hub loader and the sample/holdout produced stable metrics in
-a clean Kaggle T4 container, but they executed the earlier repository-installing carrier: the standalone path
-(carried module cells, inline manifest, `stage_missing_files` through `hf_hub_download`, `verify_snapshot` over the
-real checkpoint, and `Toto2Model.from_pretrained` on the verified directory) has been validated statically only
-(parity PASS, carrier probe with the repository package blocked) and never run. Two facts a reviewer should weigh:
-the manifest's `model.safetensors` SHA-256 was taken from the Hub's LFS metadata at the pinned revision, not
-computed from a local copy (the checkpoint is not kept on the build machine), so the clean run is the first time
-that digest is checked against downloaded bytes; and `from_pretrained(weights_dir=...)` was exercised only with a
-stubbed `Toto2Model` — the local-directory loading path of `toto-2==2.0.0` was inspected in upstream source, not
-executed. Static validation (`tools/validate_release_assets.py`), nbformat validation, a `compile()` sweep over every
-code cell, and the offline unit suite passed on the tutorial source at the candidate revision, which is necessary but
-not sufficient. The registry status remains **Candidate** until a reviewer confirms a recorded run against the
-notebook blob under review and an integrator promotes it; promotion is not performed by the builder.
+**Candidate.** The regenerated notebook (generator /3, isolated
+environment, NOTEBOOK_SPEC 2.2) completed one pass with no restart and 0 errors on a fresh Colab Tesla T4 on 2026-10-10 (blob `cd551adb6836`, commit `b478bf2`; the 2026-10-10 row above). The other rows executed earlier notebooks. The 2026-09-14 Kaggle T4
+run of the previous standalone carrier (/2) reached every cell, staged and verified the real 9.8 GB checkpoint and
+reproduced the 2026-09-11 metrics, but only after a kernel restart at its install cell's stale-module guard, so it is not
+one-pass evidence (RUN1, RUN10, ENV6, REL2). The 2026-09-11 rows ran the repository-installing notebook in a fresh
+interpreter. The regenerated notebook installs nothing into the kernel; its isolated environment, stage runner and figure
+ran end to end in the 2026-10-10 Colab T4 row. The registry status remains **Candidate** until a
+reviewer confirms a recorded one-pass run against the notebook blob under review and an integrator promotes it; promotion
+is not performed by the builder.

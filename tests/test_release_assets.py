@@ -1,3 +1,4 @@
+# ruff: noqa: E501  -- control payloads and messages are kept on one line
 """Run the static release-asset validator and prove it discriminates.
 
 A validator that passes on the committed tree proves little unless a mutated tree fails,
@@ -5,7 +6,11 @@ so each negative control below re-runs the validator against a copy carrying one
 that has actually shipped in, or been found to evade the checks of, DIMER tutorials:
 editable self-install in either spelling, hard-coded or rebound revision, persisted
 outputs, drifting identity, conflicting release status, an enabled or non-form BYOD gate,
-a required call surviving only in a comment, and a stale-import guard that no longer raises.
+a required call surviving only in a comment, an in-kernel install, a restart instruction, an edited carried file and a
+quality assert in the stage runner.
+
+The notebook-level controls run the structural, isolation and content checks directly (``_notebook_checks``): a mutated
+notebook also fails the generator-parity check (PAR3), which would otherwise mask the specific rule under test.
 """
 
 from __future__ import annotations
@@ -20,6 +25,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "tools" / "validate_release_assets.py"
 COPIED = (
+    "LICENSE",
     "MODEL_CARD.md",
     "README.md",
     "STATUS.md",
@@ -80,36 +86,31 @@ def _replace_in_code(module, old: str, new: str) -> None:
     _edit_notebook(module, mutate)
 
 
-def _first_marker_line(module) -> str:
-    """A required profile-specific call that appears as a whole source line."""
-    notebook = json.loads(_notebook_path(module).read_text(encoding="utf-8"))
-    for cell in notebook["cells"]:
-        if cell["cell_type"] != "code":
-            continue
-        for line in "".join(cell["source"]).splitlines():
-            if any(line.strip() == marker for marker in module.CODE_MARKERS):
-                return line
-    raise AssertionError("no whole-line CODE_MARKER found to use as a control")
+def _notebook_checks(module) -> None:
+    """Every notebook check except PAR3 byte parity, in validate_notebooks order."""
+    path = _notebook_path(module)
+    spec = module.NOTEBOOKS[path.name]
+    template = module._load_tool(spec["template"]).TEMPLATE
+    build = module._load_tool("build_notebook")
+    notebook = json.loads(path.read_text(encoding="utf-8"))
+    code_cells, markdown = module._validate_notebook_structure(path, notebook, spec, template, build)
+    carrier_index, runner = module._validate_carrier(path, notebook, build, template)
+    module._validate_isolation(path, notebook, code_cells, carrier_index)
+    module._validate_notebook_content(path, code_cells, markdown, carrier_index, runner, spec, template)
 
 
 def test_committed_tree_passes() -> None:
     module = _load_validator(ROOT)
-    expected = ["model-card", "identity-consistency", "weight-facts", "release-status", "notebook+parity"]
+    expected = ["model-card", "identity-consistency", "weight-facts", "release-status", "notebooks+parity"]
     assert module.validate_all() == expected
 
 
 @pytest.mark.parametrize("flag", ["'-e', ", "'--editable', "])
 def test_control_editable_self_install_is_rejected(tree: Path, flag: str) -> None:
     module = _load_validator(tree)
-    # A second pip call that installs the tree editably; the pinned-install marker line stays intact.
-    _replace_in_code(
-        module,
-        "    importlib.invalidate_caches()\n",
-        f"    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', {flag}'.'], check=True)\n"
-        "    importlib.invalidate_caches()\n",
-    )
-    with pytest.raises(module.ValidationError, match="editable self-install"):
-        module.validate_notebooks()
+    _replace_in_code(module, "run_stage('forecast')", f"subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', {flag}'.'], check=True)\nrun_stage('forecast')")
+    with pytest.raises(module.ValidationError, match="notebook kernel|editable self-install"):
+        _notebook_checks(module)
 
 
 def test_control_missing_profile_is_rejected(tree: Path) -> None:
@@ -133,62 +134,62 @@ def test_control_persisted_output_is_rejected(tree: Path) -> None:
 
 def test_control_hard_coded_revision_is_rejected(tree: Path) -> None:
     module = _load_validator(tree)
-    _, revision = module._package_identity()
-    _replace_in_code(module, "'revision': MODEL_REVISION", f"'revision': '{revision}'")
-    with pytest.raises(module.ValidationError, match="revision"):
-        module.validate_notebooks()
+    _, revision = module._package_identity(module._primary_template())
+    _replace_in_code(module, "run_stage('forecast')", f"print('{revision}')\nrun_stage('forecast')")
+    with pytest.raises(module.ValidationError, match="revision may appear only in the carried files"):
+        _notebook_checks(module)
 
 
-def test_control_rebound_identity_is_rejected(tree: Path) -> None:
+def test_control_edited_carried_file_is_rejected(tree: Path) -> None:
     module = _load_validator(tree)
-    _replace_in_code(
-        module,
-        "print({'model_id': MODEL_ID, 'revision': MODEL_REVISION",
-        "MODEL_REVISION = 'abc1234'\nprint({'model_id': MODEL_ID, 'revision': MODEL_REVISION",
-    )
-    with pytest.raises(module.ValidationError, match="must not be rebound"):
+    _replace_in_code(module, "MIN_CONTEXT = 32", "MIN_CONTEXT = 8")
+    with pytest.raises(module.ValidationError, match="carried files differ from the repository"):
         module.validate_notebooks()
 
 
 @pytest.mark.parametrize("spelling", ["{gate} = True", "{gate}=True"])
 def test_control_enabled_byod_gate_is_rejected(tree: Path, spelling: str) -> None:
     module = _load_validator(tree)
-    gate = module.BYOD_GATES[0]
-    _replace_in_code(module, f"{gate} = False", f"{gate} = False\n{spelling.format(gate=gate)}")
+    gate = "USE_BYOD"
+    line = f'{gate} = False  # @param {{type:"boolean"}}'
+    _replace_in_code(module, line, f"{line}\n{spelling.format(gate=gate)}")
     with pytest.raises(module.ValidationError, match="assigned exactly once"):
-        module.validate_notebooks()
+        _notebook_checks(module)
 
 
 def test_control_byod_gate_without_form_annotation_is_rejected(tree: Path) -> None:
     module = _load_validator(tree)
-    gate = module.BYOD_GATES[0]
+    gate = "USE_BYOD"
     _replace_in_code(module, f'{gate} = False  # @param {{type:"boolean"}}', f"{gate} = False")
-    with pytest.raises(module.ValidationError, match="Colab form parameter"):
-        module.validate_notebooks()
+    with pytest.raises(module.ValidationError, match="Colab form parameter|lack required markers"):
+        _notebook_checks(module)
 
 
 def test_control_required_call_only_in_comment_is_rejected(tree: Path) -> None:
     module = _load_validator(tree)
-    line = _first_marker_line(module)
-    _replace_in_code(module, line, f"# {line}")
-    with pytest.raises(module.ValidationError, match="missing required source markers"):
-        module.validate_notebooks()
+    _replace_in_code(module, "run_stage('evaluate')", "pass  # run_stage('evaluate')")
+    with pytest.raises(module.ValidationError, match="lack required markers|must run a stage"):
+        _notebook_checks(module)
 
 
-def test_control_guard_that_no_longer_raises_is_rejected(tree: Path) -> None:
+def test_control_restart_instruction_is_rejected(tree: Path) -> None:
     module = _load_validator(tree)
-    _replace_in_code(
-        module,
-        "    if stale:\n        raise RuntimeError(",
-        "    if stale:\n        print(  # Restart the runtime, then rerun from the top.\n            ",
-    )
-    with pytest.raises(module.ValidationError, match="must raise RuntimeError"):
+    _replace_in_code(module, "run_stage('forecast')", "print('Restart the runtime, then rerun from the top.')\nrun_stage('forecast')")
+    with pytest.raises(module.ValidationError, match="must not instruct a runtime restart"):
+        _notebook_checks(module)
+
+
+def test_control_quality_assert_in_runner_is_rejected(tree: Path) -> None:
+    module = _load_validator(tree)
+    runner = tree / "tools" / "tutorial_stages.py"
+    runner.write_text(runner.read_text(encoding="utf-8").replace("    print({**{k: v for k, v in record.items()", "    assert series.shape[1] > 0\n    print({**{k: v for k, v in record.items()", 1), encoding="utf-8")
+    with pytest.raises(module.ValidationError, match="carried stage runner|carried files differ"):
         module.validate_notebooks()
 
 
 def test_control_identity_drift_is_rejected(tree: Path) -> None:
     module = _load_validator(tree)
-    _, revision = module._package_identity()
+    _, revision = module._package_identity(module._primary_template())
     readme = tree / "README.md"
     readme.write_text(readme.read_text(encoding="utf-8").replace(revision, "0" * 40), encoding="utf-8")
     with pytest.raises(module.ValidationError, match="README.md"):
