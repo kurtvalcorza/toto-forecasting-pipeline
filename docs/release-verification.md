@@ -103,7 +103,7 @@ Pre-flight runtime: WSL2 Ubuntu 24.04 (kernel 6.18.33), Python 3.12.3, Intel Cor
 
 ## Current status
 
-**Candidate.** The regenerated notebook (generator /3, isolated
+**Candidate.** **DAT20 (code commit `8c1e013`):** the current blob `3bb98048` shows a refused BYOD input as one `Refused: <file>: <reason>` line with no traceback (NOTEBOOK_SPEC 3.0 DAT19/DAT20); its hosted Colab T4 runs (default path and a scripted refusal, `USE_BYOD=True;BYOD_CSV_PATH=/etc/hostname`) are pending, and the runs of blob `cd551adb` and earlier are history for it (REL14). The regenerated notebook (generator /3, isolated
 environment, NOTEBOOK_SPEC 2.2) completed one pass with no restart and 0 errors on a fresh Colab Tesla T4 on 2026-10-10 (blob `cd551adb6836`, commit `b478bf2`; the 2026-10-10 row above). The other rows executed earlier notebooks. The 2026-09-14 Kaggle T4
 run of the previous standalone carrier (/2) reached every cell, staged and verified the real 9.8 GB checkpoint and
 reproduced the 2026-09-11 metrics, but only after a kernel restart at its install cell's stale-module guard, so it is not
