@@ -9,7 +9,10 @@ Nothing is installed into the notebook kernel. Each stage is a separate process 
 verified snapshot under ``--weights``, the series and records of earlier stages under ``RUN_DIR/state`` (NumPy ``.npy``
 and JSON), and the learner-facing exports under ``--outputs``. The 2.5B checkpoint runs on a CUDA GPU (peak about 9.5 GiB on a T4). On
 failure a stage writes ``RUN_DIR/state/<stage>.error.json``, which the
-notebook re-raises in the kernel.
+notebook re-raises in the kernel. A BYOD CSV the ``data`` stage refuses is not a failure (NOTEBOOK_SPEC 3.0
+DAT19/DAT20): the stage raises ``Refused``, prints no traceback (the earlier run's outputs are already cleared), records
+``"refused": true`` with the file name and the rule, and exits with ``REFUSED_EXIT``; the notebook then shows one
+``Refused: <file>: <reason>`` line.
 
 Stages: weights → data → validate → forecast → evaluate → export, plus the optional ``activity`` (a rolling-origin
 comparison at an earlier holdout). ``data`` and
@@ -37,6 +40,28 @@ SYNTHETIC_SEED = 11
 SYNTHETIC_PERIODS = (2 * math.pi * 9, 2 * math.pi * 13)  # sin(t / 9) and cos(t / 13): the generator's own seasons
 SYNTHETIC_NAIVE_PERIOD = 57  # nearest integer to 2·pi·9 = 56.5 steps, the first variate's season
 DELIMITERS = (",", ";", "\t")
+
+
+REFUSED_EXIT = 3  # a user input refused with a learner-facing message (DAT20); a crash exits 1
+
+
+class Refused(ValueError):
+    """A user-supplied input that breaks the input contract (DAT19). Not a crash: no traceback is printed for it."""
+
+    def __init__(self, file: str, reason: str) -> None:
+        self.file = str(file) or "your input"
+        self.reason = str(reason).strip()
+        super().__init__(f"{self.file}: {self.reason}")
+
+
+def refused(exc: BaseException, file: str) -> Refused:
+    """``exc`` (whose message may start with ``<file>: ``) as one ``Refused`` naming ``file``, with how to recover."""
+    message = str(exc).strip() or type(exc).__name__
+    if message.startswith(f"{file}: "):
+        message = message[len(file) + 2:]
+    if not message.endswith((".", ")")):
+        message += "."
+    return Refused(file, f"{message} Fix the CSV and run the Section 4 cell again.")
 
 
 class Run:
@@ -225,7 +250,14 @@ def stage_data(run: Run) -> None:
         (run.state / name).unlink(missing_ok=True)
     if use_byod:
         path = Path(opts.get("byod_csv_path") or "")
-        info = read_byod_csv(P, path, horizon)
+        if not str(opts.get("byod_csv_path") or "").strip():
+            raise Refused("BYOD_CSV_PATH", "USE_BYOD is True but no CSV was given: set BYOD_CSV_PATH, or (in Colab) leave it empty and choose a file in the upload dialog, then run the Section 4 cell again.")
+        if not path.is_file():
+            raise Refused(str(path), "is not a file in this runtime: upload the CSV or correct BYOD_CSV_PATH, then run the Section 4 cell again.")
+        try:  # every check here reads the learner's file: an error is the file, not a bug (DAT19)
+            info = read_byod_csv(P, path, horizon)
+        except (ValueError, TypeError, KeyError, OSError, csv.Error) as exc:  # pandas' read errors are ValueError/OSError
+            raise refused(exc, path.name) from None
         series, names = info["series"], info["names"]
         record = {"sample_kind": "BYOD", "name": path.name, "delimiter": info["delimiter"], "trimmed": info["trimmed"], "time_range": [info["first"], info["last"]], "step": info["step"]}
         (run.state / "timestamps.json").write_text(json.dumps(info["timestamps"]), encoding="utf-8")
@@ -565,6 +597,9 @@ def main(argv: list[str] | None = None) -> int:
     error_file.unlink(missing_ok=True)
     try:
         STAGES[args.stage](run)
+    except Refused as exc:  # the learner's input was refused, not a crash: no traceback, a dedicated exit code (DAT20)
+        error_file.write_text(json.dumps({"type": "Refused", "refused": True, "file": exc.file, "message": str(exc)}), encoding="utf-8")
+        return REFUSED_EXIT
     except BaseException as exc:  # noqa: BLE001 -- every failure is reported to the kernel with its own message
         traceback.print_exc()
         error_file.write_text(json.dumps({"type": type(exc).__name__, "message": str(exc)}), encoding="utf-8")
