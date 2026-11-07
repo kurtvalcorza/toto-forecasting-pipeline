@@ -1,0 +1,69 @@
+{
+  "repo": "toto-forecasting-pipeline",
+  "sha": "f16c49dd4392bd25b1dedb2ce79fc3db8b1cb2a0",
+  "notebook": "tutorials/toto_forecasting_colab.ipynb",
+  "blob": "bc10f8d71d00378ed4e80a667b9afa5b171ab1ea",
+  "gpu": "T4",
+  "session": "suite-toto-f16c49d-f18d",
+  "started_utc": "2026-11-03T13:08:56+00:00",
+  "runner": "Colab CLI `colab exec -f` on a fresh session (not a browser Run all)",
+  "overrides": [
+    {
+      "name": "USE_BYOD",
+      "from": "False",
+      "to": "True"
+    },
+    {
+      "name": "BYOD_CSV_PATH",
+      "from": "''",
+      "to": "'/etc/hostname'"
+    }
+  ],
+  "run_copy_blob": "ec81de568a02c04405c728347b64e0e31276ddd4",
+  "run_copy_sha256": "54af55da288c3b9dd2db2a6147efc52c657b31ebb8fbf03d99a59c6c1d4f8693",
+  "run_copy_note": "refusal run: the run copy is the committed notebook with the listed assignment overrides, cut immediately after the refusal cell and re-serialised (nbformat layout); input_unchanged compares against that copy",
+  "truncated_after_cell": "toto_forecasting-15",
+  "refusal_cell_ref": "toto_forecasting-15",
+  "refusal_cell_index": 5,
+  "cells_dropped": 16,
+  "code_cells_dropped": 5,
+  "original_sha256": "4df6cf1beb76fc2e10d9c619c3b103414eb13f0c7ac731ee561a42ad1d356236",
+  "status": "[suite-toto-f16c49d-f18d] gpu-t4-s-usw4b0-2zwf052rkgnrj | Hardware: T4 | Shape: Standard | Variant: GPU | Status: IDLE",
+  "exec_exit_code": 0,
+  "stopped": true,
+  "stop_verified": true,
+  "wall_s": 216.0,
+  "input_unchanged": true,
+  "executed_file": "toto_forecasting_colab_f16c49d_colab-cli-t4_output.ipynb",
+  "log_cells": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "log_total": 5,
+  "code_cells": 5,
+  "executed_cells": 5,
+  "errors": [
+    {
+      "cell": "toto_forecasting-15",
+      "ename": "Refused",
+      "evalue": "hostname: no `timestamp` column in the header ['c1732d95cfe0'] (delimiter read as ','; comma, semicolon and tab are recognised) Fix the CSV and run the Section 4 cell again."
+    }
+  ],
+  "execution_counts": [],
+  "sequential": null,
+  "executed_sha256": "b2e6ffef20cb409f2a308bf6a2d55aeb769caaf4db2c962b931beb33bf9a41a2",
+  "log_sequential_complete": true,
+  "mode": "expect_refusal",
+  "refusal_line": "Refused: hostname: no `timestamp` column in the header ['c1732d95cfe0'] (delimiter read as ','; comma, semicolon and tab are recognised) Fix the CSV and run the Section 4 cell again.",
+  "halting_cell_index": 5,
+  "halting_cell_id": "toto_forecasting-15",
+  "error_cells": [
+    5
+  ],
+  "refusal_fail_reasons": [],
+  "refusal_ok": true,
+  "verdict": "PASS"
+}
